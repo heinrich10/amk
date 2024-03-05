@@ -1,12 +1,22 @@
-
+import { ajv } from '../lib/ajv.mjs';
 export class PersonController {
-  constructor(personService) {
-    this.personService = personService;
+  constructor({ person }) {
+    this.person = person;
   }
 
-  async getPerson(req, res) {
-    const { id } = req.params;
-    const person = await this.personService.getPerson(id);
+  async getAll(req, res) {
+    const person = await this.person.get();
     res.json(person);
+  }
+
+  async createPerson(req, res) {
+    const { body } = req;
+    const validate = ajv.getSchema('personRequestSchema');
+    if (validate(body)) {
+      const person = await this.person.save(body);
+      res.json(person[0]);
+    } else {
+      res.status(400).json(validate.errors);
+    }
   }
 }

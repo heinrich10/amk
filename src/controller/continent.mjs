@@ -1,5 +1,5 @@
 export class ContinentController {
-  constructor(continent) {
+  constructor({ continent }) {
     this.continent = continent;
   }
 

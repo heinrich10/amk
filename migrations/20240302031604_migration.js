@@ -17,7 +17,6 @@ exports.up = function(knex) {
     t.string('alpha_3');
   }).createTable('persons', (t) => {
     t.increments('id').primary();
-    t.string('name');
     t.string('first_name');
     t.string('last_name');
     t.string('country_code').references('countries.code');

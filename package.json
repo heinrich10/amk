@@ -24,6 +24,7 @@
   },
   "homepage": "https://github.com/amkjs/amk",
   "dependencies": {
+    "ajv": "^8.12.0",
     "amk-error": "^0.1.0",
     "amk-wrap": "^0.1.0",
     "api-error-handler": "^1.0.0",

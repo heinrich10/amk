@@ -14,21 +14,23 @@ import { PersonController } from './controller/person.mjs';
 import { Person } from './model/person.mjs';
 import { personRouter } from './router/person.mjs'
 
+import './schema/index.mjs';
 
 const app = express();
 
 const continent = new Continent();
 const country = new Country();
-const person = new Person()
+const person = new Person();
 
-const continentController = new ContinentController(continent);
-const countryController = new CountryController(country);
-const personController = new PersonController(person);
+const continentController = new ContinentController({ continent });
+const countryController = new CountryController({ country });
+const personController = new PersonController({ person });
 
 app.use(responseTime());
+app.use('/persons', personRouter(personController));
 app.use('/continents', continentRouter(continentController));
 app.use('/countries', countryRouter(countryController));
-app.use('/persons', personRouter(personController))
+
 app.use(errorHandler());
 
 export { app };

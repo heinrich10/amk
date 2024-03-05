@@ -5,7 +5,8 @@ const router = express.Router();
 const jsonParser = express.json();
 
 export const personRouter = (personController) => {
-  router.get('/', wrap(personController, 'getPerson'));
-  // router.get('/:code', wrap(countryController, 'getOneContinent'));
+  router.get('/', personController.getAll.bind(personController));
+  // router.get('/:code', wrap(personController, 'getOneContinent'));
+  router.post('/', jsonParser, personController.createPerson.bind(personController));
   return router;
 }
