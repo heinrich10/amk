@@ -9,6 +9,12 @@ export class PersonController {
     res.json(person);
   }
 
+  async getOne(req, res) {
+    const { code } = req.params;
+    const person = await this.person.getById(code);
+    res.json(person);
+  }
+
   async createPerson(req, res) {
     const { body } = req;
     const validate = ajv.getSchema('personRequestSchema');

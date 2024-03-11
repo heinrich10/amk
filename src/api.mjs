@@ -14,9 +14,10 @@ import { PersonController } from './controller/person.mjs';
 import { Person } from './model/person.mjs';
 import { personRouter } from './router/person.mjs'
 
-import './schema/index.mjs';
+import { initSchema } from './schema/index.mjs';
 
 const app = express();
+initSchema();
 
 const continent = new Continent();
 const country = new Country();

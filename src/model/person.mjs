@@ -4,25 +4,27 @@ import { ajv } from '../lib/ajv.mjs';
 export class Person {
   constructor() {
     this.dbName = 'persons'
-    this.db = db(this.dbName);
     this.validate = ajv.getSchema('personRequestSchema');
   }
 
+  getDB() {
+    return db(this.dbName)
+  }
   async get() {
-    return this.db.select();
+    return this.getDB().select();
   }
 
   async getById(id) {
-    return this.db.where({ id }).first();
+    return this.getDB().where({ id }).first();
   }
 
   async save(data){
     this.validate(data);
-    return this.db.insert(data, ['id', 'first_name', 'last_name', 'country_code']);
+    return this.getDB().insert(data, ['id', 'first_name', 'last_name', 'country_code']);
   }
 
   async update(id, data) {
     this.validate(data);
-    return this.db.where({ id }).update(data, ['id', 'first_name', 'last_name', 'country_code']);
+    return this.getDB().where({ id }).update(data, ['id', 'first_name', 'last_name', 'country_code']);
   }
 }
