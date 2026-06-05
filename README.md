@@ -1,6 +1,6 @@
 # AMK
 
-sample backend using express.js, knex.js, and amk plugins
+Minimal REST API server using Express.js, Knex.js, and SQLite3
 
 ## Pre-requisites
 - Node.js 20+
