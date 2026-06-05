@@ -1,5 +1,7 @@
+import { describe, it } from 'node:test';
+import { expect } from 'expect';
+
 import { extractQueryParams } from '../../../src/utils/query.mjs';
-import { expect } from 'chai';
 
 describe('utils test', () => {
   describe('extractQueryParams', () => {
@@ -7,16 +9,16 @@ describe('utils test', () => {
       const query = { name: 'John', age: 20 };
       const validKeys = ['name'];
       const result = extractQueryParams(query, validKeys);
-      expect(result).to.be.deep.equal({ name: 'John' });
+      expect(result).toEqual({ name: 'John' });
     });
     it('Should return nothing if no validKeys', () => {
       const query = { name: 'John', age: 20 };
       const result = extractQueryParams(query, []);
-      expect(result).to.be.deep.equal({});
+      expect(result).toEqual({});
     });
     it('Should return nothing if no input', () => {
       const result = extractQueryParams();
-      expect(result).to.be.deep.equal({});
+      expect(result).toEqual({});
     });
   });
 });
