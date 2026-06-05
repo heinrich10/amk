@@ -9,7 +9,7 @@
 # Health / Root
 # ------------------------------------------------------------------------------
 
-### List all routes (implicit — hit base)
+### List persons (quick start)
 GET {{host}}/persons
 
 # ------------------------------------------------------------------------------
@@ -48,7 +48,7 @@ GET {{host}}/countries?currency=EUR
 GET {{host}}/countries?sort=-name
 
 ### List countries — sorted by name ascending
-GET {{host}}/countries?sort=+name
+GET {{host}}/countries?sort=name
 
 ### List countries — pagination (offset 5, limit 5)
 GET {{host}}/countries?offset=5&limit=5

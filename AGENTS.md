@@ -51,7 +51,7 @@ AMK is a minimal, no-frills REST API server built with **Express.js**, **Knex.js
 │   └── seed_data.js        # Seed script for continents, countries, and persons
 ├── http/
 │   ├── api.http            # JetBrains HTTP Client requests for all API endpoints
-│   └── http-client.env.json# Environment configs (dev / docker) for the HTTP Client
+│   └── http-client.env.json # Environment configs (dev / docker) for the HTTP Client
 ├── knexfile.js             # Knex configuration (development + test environments)
 ├── package.json            # Dependencies and npm scripts
 ├── .c8rc                   # Coverage reporter configuration
