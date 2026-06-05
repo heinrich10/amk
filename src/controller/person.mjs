@@ -1,5 +1,7 @@
-import { ajv } from '../lib/ajv.mjs';
+import { ValidationError } from '../lib/error.mjs';
+import { PersonSchema } from '../schema/person.mjs';
 import { extract } from '../utils/query.mjs';
+
 export class PersonController {
   constructor({ person }) {
     this.person = person;
@@ -21,12 +23,14 @@ export class PersonController {
 
   async createPerson(req, res) {
     const { body } = req;
-    const validate = ajv.getSchema('personRequestSchema');
-    if (validate(body)) {
-      const person = await this.person.save(body);
+    const result = PersonSchema.safeParse(body);
+    if (result.success) {
+      const person = await this.person.save(result.data);
       res.json(person[0]);
     } else {
-      res.status(400).json(validate.errors);
+      const error = new ValidationError('Validation failed');
+      error.errors = result.error.issues;
+      throw error;
     }
   }
 }

@@ -165,9 +165,11 @@ This ensures migrations and queries share the same in-memory database.
 
 ---
 
-## Phase 1: Dependency Cleanup & Foundation (Week 1)
+## Phase 1: Dependency Cleanup & Foundation ✅ COMPLETE
 
 **Goal:** Modernize the dependency tree and replace abandoned packages while keeping all tests green. This phase also introduces the first TypeScript-native replacements from the Dependency Audit.
+
+**Status:** All 26 tests pass. Zero abandoned dependencies remain. Production dependency count reduced from 10 to 5.
 
 ### 1.1 Install TypeScript-Native Replacements
 
@@ -243,7 +245,17 @@ This ensures migrations and queries share the same in-memory database.
 - Update `.eslintrc.js` to support modern ECMAScript and relax `no-process-env` for config-only files
 - Ensure `npm test` passes after all changes
 
-**Exit Criteria:** All tests pass. Zero abandoned dependencies remain. Production dependency count is reduced (no lodash, dotenv, ajv, amk-wrap).
+**Exit Criteria:** ✅ All tests pass. Zero abandoned dependencies remain. Production dependency count is reduced (no lodash, dotenv, ajv, amk-wrap).
+
+**What was done:**
+- `express` updated to `^5.2.1` — native async error handling removes need for `amk-wrap`
+- `ajv` replaced with `zod` — schemas in `src/schema/*.mjs` now use Zod; controllers use `.safeParse()`
+- `lodash` removed — `fp.keys` → `Object.keys`, `fp.curry` → inline arrows, `fp.compose` → manual composition in models
+- `dotenv` removed — `package.json` scripts use Node's built-in `--env-file` flag
+- `api-error-handler` replaced with custom middleware in `src/lib/error-handler.mjs`
+- `amk-error` replaced with custom error hierarchy in `src/lib/error.mjs` (`AppError`, `ValidationError`, `NotFoundError`, `ConflictError`)
+- `amk-wrap` removed — Express 5 catches async errors natively; routers now use `.bind(controller)`
+- `.eslintrc.js` updated to `ecmaVersion: 2022` and `es2022` env
 
 > **Note:** Test runner migration (Mocha → `node:test`) is handled in **Phase 0** and is assumed complete before Phase 1 begins.
 

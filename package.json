@@ -4,8 +4,8 @@
   "description": "no frills API server using express",
   "main": "api.js",
   "scripts": {
-    "start": "node app.js",
-    "test": "c8 node --test --test-concurrency=1",
+    "start": "node --env-file=.env app.mjs",
+    "test": "c8 node --env-file=.env.test --test --test-concurrency=1",
     "migrate": "knex migrate:latest",
     "seed": "knex seed:run"
   },
@@ -26,16 +26,11 @@
   },
   "homepage": "https://github.com/amkjs/amk",
   "dependencies": {
-    "ajv": "^8.12.0",
-    "amk-error": "^0.1.0",
-    "amk-wrap": "^0.2.0",
-    "api-error-handler": "^1.0.0",
     "better-sqlite3": "^12.10.0",
-    "dotenv": "^16.4.5",
-    "express": "^4.19.2",
+    "express": "^5.2.1",
     "knex": "^3.1.0",
-    "lodash": "^4.17.21",
-    "response-time": "^2.3.2"
+    "response-time": "^2.3.2",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "c8": "^9.1.0",

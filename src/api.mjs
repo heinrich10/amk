@@ -1,6 +1,5 @@
 import express from 'express';
 import responseTime from 'response-time';
-import errorHandler from 'api-error-handler';
 
 import { ContinentController } from './controller/continent.mjs';
 import { Continent } from './model/continent.mjs';
@@ -14,10 +13,9 @@ import { PersonController } from './controller/person.mjs';
 import { Person } from './model/person.mjs';
 import { personRouter } from './router/person.mjs'
 
-import { initSchema } from './schema/index.mjs';
+import { errorHandler } from './lib/error-handler.mjs';
 
 const app = express();
-initSchema();
 
 const continent = new Continent();
 const country = new Country();
