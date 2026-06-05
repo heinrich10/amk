@@ -14,7 +14,7 @@ This roadmap transforms AMK from a minimal ES-module Express demo into a modern,
 | express | 4.19.2 | 5.2.1 | **Major update available** (v5 stable) |
 | knex | 3.1.0 | 3.2.10 | Patch/minor update available |
 | ajv | 8.12.0 | 8.20.0 | Minor updates available |
-| sqlite3 | 5.1.7 | 6.0.1 | Major update available |
+| better-sqlite3 | 12.10.0 | 12.10.0 | Active, replaced sqlite3 |
 | lodash | 4.17.21 | 4.18.1 | Patch update available |
 | amk-error | 0.1.0 | 0.1.0 | **Abandoned** (single release, 2017) |
 | amk-wrap | 0.2.0 | 1.0.0 | Active (v1 just released) |
@@ -27,8 +27,8 @@ This roadmap transforms AMK from a minimal ES-module Express demo into a modern,
 - **Types:** None (JavaScript only)
 - **DB Access:** Knex query builder with inheritance-based models
 - **Validation:** AJV for request bodies only
-- **Testing:** Mocha + Chai + Supertest + c8 coverage
-- **Target:** `node:test` + `expect` + Supertest + c8 coverage
+- **Testing:** `node:test` + `expect` + Supertest + c8 coverage
+- **Database Driver:** `better-sqlite3` (replaced deprecated `sqlite3`)
 
 ### Database Schema
 Three tables: `continents` → `countries` → `persons` (foreign-key chain)
@@ -83,32 +83,36 @@ No lodash functions remain after these replacements.
 
 ---
 
-## Phase 0: Test Runner Modernization (2–3 days)
+## Phase 0: Test Runner Modernization ✅ COMPLETE
 
 **Goal:** Replace Mocha with Node.js built-in `node:test`. Replace Chai with the standalone `expect` package. Keep c8 for coverage and Supertest for HTTP assertions.
 
-### Why `node:test`?
+### What Was Done
+
+**Database Driver:** Replaced deprecated `sqlite3` (v5) with `better-sqlite3` (v12). The old driver failed to compile on Node.js 24 + Python 3.12 due to missing `distutils`. `better-sqlite3` is the recommended Knex SQLite driver going forward and is also the preferred driver for the future Kysely migration (Phase 3).
+
+**Test Runner:** Mocha → `node:test` (Node.js built-in)
 - Zero dependency — shipped with Node.js 20+
 - Native `describe`/`it`/`beforeEach`/`afterEach` support
-- Built-in watch mode, test filtering, and TAP output
-- Eliminates Mocha and Sinon from devDependencies
+- Files renamed to `*.test.mjs` for auto-discovery
+
+**Assertions:** Chai → standalone `expect` (Jest's assertion library)
+- Keeps familiar assertion syntax without the full Jest runner
+
+**Removed:** `mocha`, `chai`, `sinon`, `.mocharc.cjs`
 
 ### 0.1 Rename Test Files
-- Rename test files to match `*.test.mjs` so `node --test` auto-discovers them:
-  - `test/api_tests/person.mjs` → `test/api_tests/person.test.mjs`
-  - `test/api_tests/country.mjs` → `test/api_tests/country.test.mjs`
-  - `test/api_tests/continents.mjs` → `test/api_tests/continents.test.mjs`
-  - `test/unit_tests/utils/query.mjs` → `test/unit_tests/utils/query.test.mjs`
-- Keep helper files (`helper.mjs`, `index.mjs`) without `.test.` so they are not executed as test files.
+- `test/api_tests/person.mjs` → `test/api_tests/person.test.mjs`
+- `test/api_tests/country.mjs` → `test/api_tests/country.test.mjs`
+- `test/api_tests/continents.mjs` → `test/api_tests/continents.test.mjs`
+- `test/unit_tests/utils/query.mjs` → `test/unit_tests/utils/query.test.mjs`
 
 ### 0.2 Update `test/index.mjs`
-- Remove `mochaGlobalSetup` / `mochaGlobalTeardown` exports
-- Keep `up()` / `down()` for Knex migrations/seeds
-- Add a `teardown()` export that calls `db.destroy()`
-- Each test file will import `up`/`down`/`teardown` and manage its own lifecycle hooks
+- Removed `mochaGlobalSetup` / `mochaGlobalTeardown` exports
+- Exports `up()`, `down()`, and `teardown()`
+- Each test file imports these and manages its own `beforeEach`/`afterEach`/`after` hooks
 
 ### 0.3 Migrate Assertions (Chai → `expect`)
-Replace Chai `expect` patterns with their `expect` equivalents:
 
 | Chai | `expect` |
 |------|----------|
@@ -119,32 +123,45 @@ Replace Chai `expect` patterns with their `expect` equivalents:
 | `expect(x).to.have.property('a', 1)` | `expect(x.a).toBe(1)` |
 | `expect(x).to.not.have.property('a')` | `expect(x.a).toBeUndefined()` |
 
-Update `test/api_tests/helper.mjs` to use `expect` instead of Chai's `expect`.
-
 ### 0.4 Update Each Test File
-- Replace `import { describe, it, beforeEach, afterEach } from 'mocha'` with `from 'node:test'`
-- Replace `import { expect } from 'chai'` with `import { expect } from 'expect'`
-- Convert `beforeEach`/`afterEach` hooks to use `up()`/`down()`
-- Add an `after` hook that calls `teardown()` to close the DB connection
-- Keep Supertest for HTTP-level testing (works unchanged with `node:test`)
+- `import { describe, it, beforeEach, afterEach, after } from 'node:test'`
+- `import { expect } from 'expect'`
+- `beforeEach`/`afterEach` hooks call `up()`/`down()`
+- `after` hook calls `teardown()` to close the DB connection
+- Supertest for HTTP-level testing (unchanged)
 
-### 0.5 Delete Mocha Configuration
-- Delete `.mocharc.cjs`
-
-### 0.6 Update `package.json`
-- **Remove** devDependencies: `mocha`, `chai`, `sinon`
-- **Add** devDependency: `expect`
-- **Update** `"test"` script:
+### 0.5 Update `package.json`
+- **Removed** devDependencies: `mocha`, `chai`, `sinon`
+- **Added** devDependency: `expect`
+- **Updated** `"test"` script:
   ```json
-  "test": "c8 node --test"
+  "test": "c8 node --test --test-concurrency=1"
   ```
-- `node --test` auto-discovers `*.test.mjs` files; no glob or config needed.
+- **Added** convenience scripts:
+  ```json
+  "migrate": "knex migrate:latest",
+  "seed": "knex seed:run"
+  ```
 
-### 0.7 Coverage Verification
-- Ensure `.c8rc` still produces `lcov` and `text-summary`
-- Run `npm test` and confirm coverage numbers match the pre-migration baseline
+> **Why `--test-concurrency=1`?** All test files share a singleton Knex instance backed by a single `:memory:` SQLite database. `node --test` runs files in parallel by default, which causes migration lock races. Sequential execution is required.
 
-**Exit Criteria:** `npm test` passes. Coverage report is generated. Zero Mocha/Sinon/Chai references remain.
+### 0.6 Pool Configuration for `:memory:`
+`better-sqlite3` creates a separate in-memory database per connection. The singleton `db` instance is configured with:
+```js
+pool: isMemoryDb ? { min: 1, max: 1 } : undefined
+```
+This ensures migrations and queries share the same in-memory database.
+
+### 0.7 Seed Data Fixes
+`better-sqlite3` enforces foreign keys by default (unlike `sqlite3`). Two fixes were required:
+1. **Deletion order** in seed script: `persons` → `countries` → `continents`
+2. **Invalid `country_code`**: Changed `'EU'` to `'FR'` in seed data (EU is not a valid ISO country code in the `countries` table)
+
+### 0.8 Coverage Verification
+- `.c8rc` still produces `lcov` and `text-summary`
+- `npm test` passes with 93.27% statements, 92.77% branches
+
+**Exit Criteria:** ✅ `npm test` passes. Coverage report generated. Zero Mocha/Sinon/Chai references remain.
 
 ---
 
