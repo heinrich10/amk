@@ -1,0 +1,131 @@
+# AMK API — JetBrains HTTP Client requests
+# Base URL is configured in http-client.env.json
+# Run individual requests by clicking the gutter icon in IntelliJ / WebStorm / Rider.
+
+### Variables (local scope)
+# These can be overridden per-request or in the environment file.
+
+# ------------------------------------------------------------------------------
+# Health / Root
+# ------------------------------------------------------------------------------
+
+### List all routes (implicit — hit base)
+GET {{host}}/persons
+
+# ------------------------------------------------------------------------------
+# Continents
+# ------------------------------------------------------------------------------
+
+### List all continents
+GET {{host}}/continents
+
+### Get a single continent — Asia
+GET {{host}}/continents/AS
+
+### Get a single continent — Europe
+GET {{host}}/continents/EU
+
+### Get a single continent — Not Found
+GET {{host}}/continents/XX
+
+# ------------------------------------------------------------------------------
+# Countries
+# ------------------------------------------------------------------------------
+
+### List all countries (paginated, default limit 10)
+GET {{host}}/countries
+
+### List countries — filter by continent (Europe)
+GET {{host}}/countries?continent_code=EU
+
+### List countries — filter by name substring ("land")
+GET {{host}}/countries?name=land
+
+### List countries — filter by exact currency
+GET {{host}}/countries?currency=EUR
+
+### List countries — sorted by name descending
+GET {{host}}/countries?sort=-name
+
+### List countries — sorted by name ascending
+GET {{host}}/countries?sort=+name
+
+### List countries — pagination (offset 5, limit 5)
+GET {{host}}/countries?offset=5&limit=5
+
+### List countries — combined filter + sort + pagination
+GET {{host}}/countries?continent_code=AS&sort=-name&limit=5&offset=0
+
+### Get a single country — United States
+GET {{host}}/countries/US
+
+### Get a single country — France
+GET {{host}}/countries/FR
+
+### Get a single country — Not Found
+GET {{host}}/countries/ZZ
+
+# ------------------------------------------------------------------------------
+# Persons
+# ------------------------------------------------------------------------------
+
+### List all persons (paginated, default limit 10)
+GET {{host}}/persons
+
+### List persons — filter by first name substring ("John")
+GET {{host}}/persons?first_name=John
+
+### List persons — filter by last name substring ("Doe")
+GET {{host}}/persons?last_name=Doe
+
+### List persons — filter by country code
+GET {{host}}/persons?country_code=US
+
+### List persons — sorted by first name descending
+GET {{host}}/persons?sort=-first_name
+
+### List persons — pagination (offset 2, limit 3)
+GET {{host}}/persons?offset=2&limit=3
+
+### List persons — combined filter + sort + pagination
+GET {{host}}/persons?country_code=US&sort=-last_name&limit=2&offset=0
+
+### Get a single person (ID must exist — seeded IDs start at 1)
+GET {{host}}/persons/1
+
+### Get a single person — Not Found
+GET {{host}}/persons/99999
+
+### Create a new person — valid payload
+POST {{host}}/persons
+Content-Type: application/json
+
+{
+  "first_name": "Alice",
+  "last_name": "Wonder",
+  "country_code": "US"
+}
+
+### Create a new person — minimal valid payload (only required fields)
+POST {{host}}/persons
+Content-Type: application/json
+
+{
+  "first_name": "Bob",
+  "country_code": "FR"
+}
+
+### Create a new person — invalid payload (missing required field)
+POST {{host}}/persons
+Content-Type: application/json
+
+{
+  "last_name": "MissingFirstName",
+  "country_code": "GB"
+}
+
+### Create a new person — invalid payload (empty body)
+POST {{host}}/persons
+Content-Type: application/json
+
+{}
