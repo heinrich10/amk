@@ -9,5 +9,6 @@ export const db = knex({
   connection: {
     filename: Config.DB
   },
+  useNullAsDefault: true,
   pool: isMemoryDb ? { min: 1, max: 1 } : undefined,
 });

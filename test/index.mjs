@@ -1,10 +1,7 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import dotenv from 'dotenv';
+import './env.mjs';
 import { db } from '../src/lib/db.mjs';
-
-dotenv.config({ path: '.env.test' });
-process.env.NODE_ENV = 'test';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

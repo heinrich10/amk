@@ -7,7 +7,7 @@ sample backend using express.js, knex.js, and amk plugins
 
 ## How to run
 1. Install dependencies: `npm install`
-2. Copy `.env.test` to `.env` and update the values
+2. Create a `.env` file with the required environment variables (see `config/config.mjs` for available options)
 3. Run the app: `npm start`
 4. Call the API endpoint: `curl http://localhost:3000/persons`
 
