@@ -6,16 +6,22 @@
 module.exports = {
 
   development: {
-    client: 'sqlite3',
+    client: 'better-sqlite3',
     connection: {
       filename: './dbdev.sqlite3.db'
-    }
+    },
+    useNullAsDefault: true
   },
 
   test: {
-    client: 'sqlite3',
+    client: 'better-sqlite3',
     connection: {
       filename: ':memory:'
+    },
+    useNullAsDefault: true,
+    pool: {
+      min: 1,
+      max: 1
     }
   },
 

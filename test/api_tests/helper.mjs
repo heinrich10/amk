@@ -1,4 +1,4 @@
-import { expect } from 'chai';
+import { expect } from 'expect';
 
 export const paginationHelper = async ({ client, path, params }) => {
   const res = await client
@@ -6,10 +6,10 @@ export const paginationHelper = async ({ client, path, params }) => {
     .query(params);
 
   const { body, status } = res;
-  expect(status).to.be.equal(200);
-  expect(body).to.have.property('data');
-  expect(body).to.have.property('total');
-  expect(body).to.have.property('offset');
-  expect(body).to.have.property('limit');
+  expect(status).toBe(200);
+  expect(body).toHaveProperty('data');
+  expect(body).toHaveProperty('total');
+  expect(body).toHaveProperty('offset');
+  expect(body).toHaveProperty('limit');
   return res;
 }

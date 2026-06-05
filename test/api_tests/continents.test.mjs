@@ -1,7 +1,9 @@
+import { describe, it, beforeEach, afterEach, after } from 'node:test';
 import request from 'supertest';
+import { expect } from 'expect';
+
 import { app } from '../../src/api.mjs';
-import { up, down } from '../index.mjs';
-import { expect } from 'chai';
+import { up, down, teardown } from '../index.mjs';
 
 describe('/continents API test', () => {
   beforeEach(async () => {
@@ -9,6 +11,9 @@ describe('/continents API test', () => {
   });
   afterEach(async () => {
     await down();
+  });
+  after(async () => {
+    await teardown();
   });
   describe('GET /continents', () => {
     it('Should return all continents', () => {
@@ -18,8 +23,8 @@ describe('/continents API test', () => {
         .expect(200)
         .then((res) => {
           const {body} = res;
-          expect(body).to.be.an('array');
-          expect(body).to.have.length(7);
+          expect(body).toBeInstanceOf(Array);
+          expect(body).toHaveLength(7);
         });
     });
   });
@@ -31,9 +36,9 @@ describe('/continents API test', () => {
         .expect(200)
         .then((res) => {
           const { body } = res;
-          expect(body).to.be.an('object');
-          expect(body).to.have.property('code', 'AS');
-          expect(body).to.have.property('name', 'Asia');
+          expect(body).toBeInstanceOf(Object);
+          expect(body).toHaveProperty('code', 'AS');
+          expect(body).toHaveProperty('name', 'Asia');
       });
     });
     it('Should return 404 if the continent with the given id does not exist', () => {
@@ -43,7 +48,7 @@ describe('/continents API test', () => {
         .expect(200)
         .then((res) => {
           const { body } = res;
-          expect(body).to.be.deep.equal({});
+          expect(body).toEqual({});
       });
     });
   });

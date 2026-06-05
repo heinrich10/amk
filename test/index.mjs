@@ -1,5 +1,6 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import './env.mjs';
 import { db } from '../src/lib/db.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -20,8 +21,6 @@ export const down = async () => {
   await db.migrate.rollback(migrationsConfig, true);
 }
 
-export const mochaGlobalSetup = async () => {}
-
-export const mochaGlobalTeardown = async () => {
+export const teardown = async () => {
   await db.destroy();
 }

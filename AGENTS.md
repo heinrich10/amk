@@ -4,12 +4,12 @@ This document is for AI coding agents working on the AMK repository. It describe
 
 ## Project Overview
 
-AMK is a minimal, no-frills REST API server built with **Express.js**, **Knex.js**, and SQLite3. It demonstrates a layered backend architecture for three related entities: `persons`, `countries`, and `continents`. The project uses **ES modules** (`.mjs` files) throughout and targets Node.js 20+ (see `Dockerfile`).
+AMK is a minimal, no-frills REST API server built with **Express.js**, **Knex.js**, and **better-sqlite3**. It demonstrates a layered backend architecture for three related entities: `persons`, `countries`, and `continents`. The project uses **ES modules** (`.mjs` files) throughout and targets Node.js 20+ (see `Dockerfile`).
 
 - **Repository**: https://github.com/amkjs/amk
 - **License**: Apache-2.0
 - **Runtime**: Node.js
-- **Database**: SQLite3 (file-based for development, `:memory:` for tests)
+- **Database**: SQLite3 via `better-sqlite3` (file-based for development, `:memory:` for tests)
 - **Server port**: `3000` (hardcoded in `app.mjs`)
 
 ## Technology Stack
@@ -18,10 +18,10 @@ AMK is a minimal, no-frills REST API server built with **Express.js**, **Knex.js
 |-------|------------|
 | HTTP Framework | Express.js 4 |
 | Query Builder / ORM | Knex.js 3 |
-| Database | SQLite3 |
+| Database | SQLite3 via `better-sqlite3` |
 | Validation | AJV 8 |
 | Async Error Handling | `amk-wrap` |
-| Testing | Mocha 10, Chai 5, Supertest 6, Sinon 17 |
+| Testing | `node:test`, `expect`, Supertest 6 |
 | Coverage | c8 9 |
 | Linting | ESLint (eslint:recommended + custom rules) |
 | Environment Config | dotenv |
@@ -40,9 +40,9 @@ AMK is a minimal, no-frills REST API server built with **Express.js**, **Knex.js
 │   ├── lib/                # Shared infrastructure (DB connection, AJV instance)
 │   └── utils/              # Pure helper functions (query parsing, filtering, etc.)
 ├── test/
-│   ├── api_tests/          # Integration / HTTP-level tests
-│   ├── unit_tests/         # Unit tests for utilities
-│   └── index.mjs           # Test bootstrap — runs Knex migrations & seeds
+│   ├── api_tests/          # Integration / HTTP-level tests (*.test.mjs)
+│   ├── unit_tests/         # Unit tests for utilities (*.test.mjs)
+│   └── index.mjs           # Test bootstrap — exports up/down/teardown
 ├── config/
 │   └── config.mjs          # Centralized config object (reads `process.env.DB`)
 ├── migrations/
@@ -51,7 +51,6 @@ AMK is a minimal, no-frills REST API server built with **Express.js**, **Knex.js
 │   └── seed_data.js        # Seed script for continents, countries, and persons
 ├── knexfile.js             # Knex configuration (development + test environments)
 ├── package.json            # Dependencies and npm scripts
-├── .mocharc.cjs            # Mocha configuration
 ├── .c8rc                   # Coverage reporter configuration
 ├── .eslintrc.js            # Linting rules
 └── Dockerfile              # Node 20 Alpine container image
@@ -107,28 +106,32 @@ npm install
 npm start          # Note: package.json says "node app.js" but the actual file is app.mjs
 
 # Run the test suite with coverage
-npm test           # Equivalent to: c8 mocha
+npm test           # Equivalent to: c8 node --test --test-concurrency=1
 
 # Run Knex migrations
-npx knex migrate:latest
+npm run migrate    # Equivalent to: knex migrate:latest
 
 # Run seed script
-npx knex seed:run
+npm run seed       # Equivalent to: knex seed:run
 ```
 
 ### Test Setup
 
-- `.mocharc.cjs` forces `NODE_ENV=test`, loads `.env.test`, and requires `test/index.mjs` before specs.
-- `test/index.mjs` runs `knex migrate:latest` and `knex seed:run` using the in-memory test database.
-- API tests live in `test/api_tests/*.mjs` and use **Supertest** against the Express app exported from `src/api.mjs`.
-- Unit tests live in `test/unit_tests/**/*.mjs`.
-- Mocha is configured with `checkLeaks: true` to detect global variable pollution.
+- `node --test` auto-discovers `*.test.mjs` files; no glob or config needed.
+- `test/index.mjs` exports `up()`, `down()`, and `teardown()` for Knex migrations/seeds.
+- Each test file imports `up`/`down`/`teardown` and manages its own lifecycle hooks (`beforeEach`/`afterEach`/`after`).
+- API tests live in `test/api_tests/*.test.mjs` and use **Supertest** against the Express app exported from `src/api.mjs`.
+- Unit tests live in `test/unit_tests/**/*.test.mjs`.
+- Tests must run sequentially (`--test-concurrency=1`) because all files share a singleton Knex instance backed by a single `:memory:` SQLite database.
 - c8 is configured with `all: true` and reporters `lcov` + `text-summary`.
 
 ## Database
 
 - **Development**: SQLite3 file (`./dbdev.sqlite3.db`) — configurable via `DB` env var (see `config/config.mjs`).
 - **Test**: SQLite3 `:memory:` database (see `knexfile.js`).
+- **Driver**: `better-sqlite3` via Knex. Replaced the deprecated `sqlite3` package.
+- **Pool constraint for `:memory:`**: The singleton `db` instance uses `pool: { min: 1, max: 1 }` when `DB` is `:memory:`. `better-sqlite3` creates a separate in-memory database per connection; restricting the pool ensures migrations and queries share the same database.
+- **Foreign keys**: `better-sqlite3` enforces foreign keys by default. Seed data deletion order must respect FK constraints (`persons` → `countries` → `continents`).
 - Migrations and seeds are standard Knex files in `migrations/` and `seeds/`.
 - Schema consists of three tables: `continents`, `countries`, `persons` with foreign-key relationships.
 

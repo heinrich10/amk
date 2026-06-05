@@ -3,8 +3,11 @@
  * @returns { Promise<void> } 
  */
 exports.seed = async function(knex) {
-  // Deletes ALL existing entries
-  await knex('continents').del()
+  // Deletes ALL existing entries in reverse dependency order
+  await knex('persons').del();
+  await knex('countries').del();
+  await knex('continents').del();
+
   await knex('continents').insert([
     { code: 'AF', name: 'Africa'},
     { code: 'AN', name: 'Antarctica'},
@@ -271,10 +274,9 @@ exports.seed = async function(knex) {
     { code: 'ZW', name: 'Zimbabwe', phone: 263, symbol: '$', capital: 'Harare', currency: 'ZWL', continent_code: 'AF', alpha_3: 'ZWE'},
   ]);
 
-  await knex('persons').del();
   await knex('persons').insert([
     { last_name: 'Doe', first_name: 'John', country_code: 'US' },
-    { last_name: 'Cole', first_name: 'Adam', country_code: 'EU' },
+    { last_name: 'Cole', first_name: 'Adam', country_code: 'FR' },
     { last_name: 'Best', first_name: 'Gianluca', country_code: 'GB' },
     { last_name: 'Lyons', first_name: 'Brianna', country_code: 'AU' },
     { last_name: 'Mcmillan', first_name: 'Zoe', country_code: 'US' },
