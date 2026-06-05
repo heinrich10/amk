@@ -1,6 +1,3 @@
-import fp from 'lodash/fp.js';
-const { keys, curry } = fp;
-
 export const extractQueryParams = (query = {}, validKeys = []) => {
   const params = {};
   for (const key of validKeys) {
@@ -47,11 +44,9 @@ export const extract = (query, validKeys) => {
   ]
 }
 
-
-
-export const applyFilter = curry((q, db) => {
+export const applyFilter = (q) => (db) => {
   const db_ = db;
-  keys(q).map((key) => {
+  Object.keys(q).forEach((key) => {
     const qValue = q[key]
     if (qValue) {
       // easy way to choose if using like or equal
@@ -64,21 +59,21 @@ export const applyFilter = curry((q, db) => {
     }
   });
   return db_;
-});
+}
 
-export const applySort = curry((sort, db) => {
+export const applySort = (sort) => (db) => {
   const { key, order } = sort;
   const db_ = db;
   if (key && order) {
     db_.orderBy(sort.key, sort.order);
   }
   return db_;
-});
+}
 
-export const applyPagination = curry((pagination, db) => {
+export const applyPagination = (pagination) => (db) => {
   const { limit, offset } = pagination;
   const db_ = db;
   if (limit) db_.limit(limit);
   if (offset) db_.offset(offset);
   return db_;
-});
+}

@@ -1,8 +1,5 @@
-import fp from 'lodash/fp.js'
 import { BaseModel } from './base.mjs';
 import { applySort, applyFilter, applyPagination } from '../utils/query.mjs';
-
-const { compose } = fp;
 
 /*
   * This class is responsible for handling the business logic of the country entity.
@@ -24,8 +21,9 @@ export class Country extends BaseModel {
 
   async get({ q = {}, sort = {}, pagination = {} }) {
     const { limit, offset } = pagination;
-    const f = compose(applySort(sort), applyPagination(pagination), applyFilter(q));
-    const qs = f(this.getDB());
+    const qs = applyFilter(q)(this.getDB());
+    applySort(sort)(qs);
+    applyPagination(pagination)(qs);
     const [total, rs] = await Promise.all([
       this.getCount(q),
       qs.select(

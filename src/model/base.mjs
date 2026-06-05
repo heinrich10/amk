@@ -10,7 +10,7 @@ export class BaseModel {
   }
 
   async getCount(q = {}) {
-    const db_ = applyFilter(q, this.getDB());
+    const db_ = applyFilter(q)(this.getDB());
     const rs = await db_.count('* as count').first();
     return rs.count;
   }

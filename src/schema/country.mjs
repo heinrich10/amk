@@ -1,12 +1,11 @@
-export const queryCountrySchema = {
-  type: 'object',
-  properties: {
-    name: { type: 'string' },
-    phone: { type: 'number' },
-    symbol: { type: 'string' },
-    capital: { type: 'string' },
-    currency: { type: 'string' },
-    continent_code: { type: 'string' },
-    alpha_3: { type: 'string' },
-  },
-};
+import { z } from 'zod';
+
+export const QueryCountrySchema = z.object({
+  name: z.string().optional(),
+  phone: z.coerce.number().optional(),
+  symbol: z.string().optional(),
+  capital: z.string().optional(),
+  currency: z.string().optional(),
+  continent_code: z.string().optional(),
+  alpha_3: z.string().optional(),
+}).partial();

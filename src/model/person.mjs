@@ -1,11 +1,7 @@
-import fp from 'lodash/fp.js';
-
-import { personRequestSchema } from '../schema/person.mjs';
-import { ajv } from '../lib/ajv.mjs';
+import { PersonSchema } from '../schema/person.mjs';
 import { BaseModel } from './base.mjs';
 import { applySort, applyPagination, applyFilter } from '../utils/query.mjs';
 
-const { compose } = fp;
 /*
   * This class is responsible for handling the business logic of the person entity.
   * fields:
@@ -18,13 +14,13 @@ const { compose } = fp;
 export class Person extends BaseModel {
   constructor() {
     super('persons')
-    this.validate = ajv.getSchema('personRequestSchema');
   }
 
   async get({ q = {}, sort = {}, pagination = {} }) {
     const { limit, offset } = pagination;
-    const f = compose(applySort(sort), applyPagination(pagination), applyFilter(q));
-    const qs = f(this.getDB());
+    const qs = applyFilter(q)(this.getDB());
+    applySort(sort)(qs);
+    applyPagination(pagination)(qs);
     const [total, rs] = await Promise.all([
       this.getCount(q),
       qs.select('id', 'first_name', 'last_name', 'country_code'),
@@ -85,12 +81,12 @@ export class Person extends BaseModel {
   }
 
   async save(data){
-    this.validate(data);
+    PersonSchema.parse(data);
     return this.getDB().insert(data, ['id', 'first_name', 'last_name', 'country_code']);
   }
 
   async update(id, data) {
-    this.validate(data);
+    PersonSchema.parse(data);
     return this.getDB().where({ id }).update(data, ['id', 'first_name', 'last_name', 'country_code']);
   }
 }

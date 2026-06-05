@@ -1,10 +1,8 @@
-import { ajv } from '../lib/ajv.mjs';
+import { PersonSchema, QueryPersonSchema } from './person.mjs';
+import { QueryCountrySchema } from './country.mjs';
 
-import { personRequestSchema, queryPersonSchema } from './person.mjs';
-import { queryCountrySchema } from './country.mjs';
-
-export const initSchema = () => {
-  ajv.addSchema(personRequestSchema, 'personRequestSchema');
-  ajv.addSchema(queryPersonSchema, 'queryPersonSchema');
-  ajv.addSchema(queryCountrySchema, 'queryCountrySchema')
-}
+export const schemas = {
+  personRequestSchema: PersonSchema,
+  queryPersonSchema: QueryPersonSchema,
+  queryCountrySchema: QueryCountrySchema,
+};

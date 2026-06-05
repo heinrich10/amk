@@ -1,22 +1,13 @@
+import { z } from 'zod';
 
-import { ajv } from '../lib/ajv.mjs';
+export const PersonSchema = z.object({
+  first_name: z.string().min(1),
+  last_name: z.string().optional(),
+  country_code: z.string().length(2),
+});
 
-export const personRequestSchema = {
-  type: 'object',
-  properties: {
-    first_name: { type: 'string' },
-    last_name: { type: 'string' },
-    country_code: { type: 'string' },
-  },
-  required: ['first_name', 'country_code'],
-};
-
-export const queryPersonSchema = {
-  type: 'object',
-  properties: {
-    first_name: { type: 'string' },
-    last_name: { type: 'string' },
-    country_code: { type: 'string' },
-  },
-};
-
+export const QueryPersonSchema = z.object({
+  first_name: z.string().optional(),
+  last_name: z.string().optional(),
+  country_code: z.string().optional(),
+}).partial();
