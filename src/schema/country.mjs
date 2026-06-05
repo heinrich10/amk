@@ -8,4 +8,4 @@ export const QueryCountrySchema = z.object({
   currency: z.string().optional(),
   continent_code: z.string().optional(),
   alpha_3: z.string().optional(),
-}).partial();
+});

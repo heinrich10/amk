@@ -10,4 +10,4 @@ export const QueryPersonSchema = z.object({
   first_name: z.string().optional(),
   last_name: z.string().optional(),
   country_code: z.string().optional(),
-}).partial();
+});

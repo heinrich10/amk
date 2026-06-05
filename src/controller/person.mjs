@@ -29,7 +29,7 @@ export class PersonController {
       res.json(person[0]);
     } else {
       const error = new ValidationError('Validation failed');
-      error.errors = result.error.errors;
+      error.errors = result.error.issues;
       throw error;
     }
   }

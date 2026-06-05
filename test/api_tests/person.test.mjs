@@ -132,6 +132,39 @@ describe('/persons API test', () => {
       expect(first).toHaveProperty('first_name', 'John');
     });
   });
+  describe('POST /persons', () => {
+    it('Should create a person with valid payload', async () => {
+      const res = await request(app)
+        .post('/persons')
+        .send({ first_name: 'Alice', last_name: 'Wonder', country_code: 'US' })
+        .expect('Content-Type', /json/)
+        .expect(200);
+      expect(res.body).toHaveProperty('id');
+      expect(res.body).toHaveProperty('first_name', 'Alice');
+      expect(res.body).toHaveProperty('country_code', 'US');
+    });
+    it('Should return 400 with validation errors for invalid payload', async () => {
+      const res = await request(app)
+        .post('/persons')
+        .send({ last_name: 'MissingFirstName', country_code: 'GB' })
+        .expect('Content-Type', /json/)
+        .expect(400);
+      expect(res.body).toHaveProperty('message', 'Validation failed');
+      expect(res.body).toHaveProperty('errors');
+      expect(res.body.errors).toBeInstanceOf(Array);
+      expect(res.body.errors.length).toBeGreaterThan(0);
+    });
+    it('Should return 400 with validation errors for empty body', async () => {
+      const res = await request(app)
+        .post('/persons')
+        .send({})
+        .expect('Content-Type', /json/)
+        .expect(400);
+      expect(res.body).toHaveProperty('message', 'Validation failed');
+      expect(res.body).toHaveProperty('errors');
+      expect(res.body.errors).toBeInstanceOf(Array);
+    });
+  });
   describe('GET /persons/:id', () => {
     it('Should return a continent with the given id', () => {
       return request(app)
