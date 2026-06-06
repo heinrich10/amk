@@ -265,25 +265,31 @@ This ensures migrations and queries share the same in-memory database.
 
 **Goal:** Convert the entire codebase from JavaScript/ESM to TypeScript without changing runtime behavior.
 
-### 2.1 Tooling Installation
-- Add `typescript` as dev dependency
-- Add `@types/node`, `@types/supertest`, `@types/express`
-- **No `@types/lodash` needed** — native JS ships its own types
-- Create `tsconfig.json`:
-  - `target: ES2022`
-  - `module: NodeNext`
-  - `moduleResolution: NodeNext`
-  - `strict: true`
-  - `outDir: dist`
-  - `rootDir: src`
-- Update `package.json`:
-  - Change `"main"` to `"dist/api.js"`
-  - Add `"types"` field
-  - Update scripts: `"build": "tsc"`, `"start": "node dist/app.js"`, `"dev": "tsx app.ts"`
+### 2.1 Tooling Installation ✅ COMPLETE
+
+**Status:** TypeScript compiler, type definitions, and `tsx` loader installed and verified. Pilot file converted. All 27 tests pass. `npm run build` succeeds.
+
+**What was done:**
+- Installed dev dependencies: `typescript`, `@types/node`, `@types/express`, `@types/supertest`, `tsx`
+- Created `tsconfig.json` with gradual migration settings:
+  - `target: ES2022`, `module: NodeNext`, `moduleResolution: NodeNext`
+  - `strict: true`, `allowJs: true`, `checkJs: false`
+  - `rootDir: "."`, `outDir: "./dist"` — mirrors full source tree into `dist/`
+- Updated `package.json`:
+  - `"main": "dist/src/api.js"`, `"types": "dist/src/api.d.ts"`
+  - `"build": "tsc"`, `"start": "node --env-file=.env dist/app.js"`, `"dev": "tsx --env-file=.env app.ts"`
+  - `"test": "c8 tsx --env-file=.env.test --test --test-concurrency=1 <files>"` — explicit file list required because `node --test` does not auto-discover `.test.ts`
+- **Pilot conversion**: `src/utils/query.mjs` → `src/utils/query.ts` with full type annotations
+- Updated all importers to use `.js` extension (NodeNext convention: `import { x } from './query.js'` even though source is `query.ts`)
+
+**Key decisions:**
+- `allowJs: true` enables gradual migration — `.mjs` and `.ts` files can coexist during Phase 2
+- `tsx` is used for dev and test workflows (no compile step needed)
+- `tsc` is used for production builds (`npm run build` → `dist/`)
 
 ### 2.2 File-by-File Migration Strategy
-Rename `.mjs` → `.ts` in this order:
-1. `src/utils/query.mjs` (pure functions, easiest)
+Rename `.mjs` → `.ts` in this order (query.ts is already done):
+1. ~~`src/utils/query.mjs`~~ ✅ (pure functions, easiest — completed in 2.1)
 2. `src/lib/db.mjs`
 3. `src/schema/*.mjs` (Zod schemas — already typed)
 4. `src/model/base.mjs` → `src/model/base.ts`
