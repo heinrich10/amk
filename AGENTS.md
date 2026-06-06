@@ -112,8 +112,8 @@ npm install
 npm run build      # Runs tsc — compiles src/ and test/ into dist/
 
 # Start the development server (listens on port 3000)
-npm start          # Runs compiled output: node --env-file=.env dist/app.js
-npm run dev        # Runs directly via tsx: tsx --env-file=.env app.ts
+npm start          # Runs compiled output: node --env-file=.env dist/app.mjs
+npm run dev        # Runs directly via tsx: tsx --env-file=.env app.mjs
 
 # Run the test suite with coverage
 npm test           # Equivalent to: c8 tsx --env-file=.env.test --test --test-concurrency=1 <test-files>

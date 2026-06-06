@@ -211,8 +211,8 @@ This ensures migrations and queries share the same in-memory database.
 - Remove `dotenv` dependency
 - Update `package.json` scripts to use Node's built-in flag:
   ```json
-  "start": "node --env-file=.env dist/app.js",
-  "dev": "tsx --env-file=.env app.ts"
+  "start": "node --env-file=.env dist/app.mjs",
+  "dev": "tsx --env-file=.env app.mjs"
   ```
 - For tests, `.env.test` is loaded by the test bootstrap; keep loading it programmatically or use `--env-file=.env.test`
 
@@ -276,8 +276,8 @@ This ensures migrations and queries share the same in-memory database.
   - `strict: true`, `allowJs: true`, `checkJs: false`
   - `rootDir: "."`, `outDir: "./dist"` — mirrors full source tree into `dist/`
 - Updated `package.json`:
-  - `"main": "dist/src/api.js"`, `"types": "dist/src/api.d.ts"`
-  - `"build": "tsc"`, `"start": "node --env-file=.env dist/app.js"`, `"dev": "tsx --env-file=.env app.ts"`
+  - `"main": "dist/src/api.mjs"`, `"types": "dist/src/api.d.mts"`
+  - `"build": "tsc"`, `"start": "node --env-file=.env dist/app.mjs"`, `"dev": "tsx --env-file=.env app.mjs"`
   - `"test": "c8 tsx --env-file=.env.test --test --test-concurrency=1 <files>"` — explicit file list required because `node --test` does not auto-discover `.test.ts`
 - **Pilot conversion**: `src/utils/query.mjs` → `src/utils/query.ts` with full type annotations
 - Updated all importers to use `.js` extension (NodeNext convention: `import { x } from './query.js'` even though source is `query.ts`)

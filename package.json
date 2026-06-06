@@ -2,12 +2,12 @@
   "name": "amk",
   "version": "0.2.0",
   "description": "no frills API server using express",
-  "main": "dist/src/api.js",
-  "types": "dist/src/api.d.ts",
+  "main": "dist/src/api.mjs",
+  "types": "dist/src/api.d.mts",
   "scripts": {
     "build": "tsc",
-    "start": "node --env-file=.env dist/app.js",
-    "dev": "tsx --env-file=.env app.ts",
+    "start": "node --env-file=.env dist/app.mjs",
+    "dev": "tsx --env-file=.env app.mjs",
     "test": "c8 tsx --env-file=.env.test --test --test-concurrency=1 test/api_tests/person.test.mjs test/api_tests/country.test.mjs test/api_tests/continents.test.mjs test/unit_tests/utils/query.test.mjs",
     "migrate": "knex migrate:latest",
     "seed": "knex seed:run"
