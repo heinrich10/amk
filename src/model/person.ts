@@ -1,24 +1,19 @@
-import { PersonSchema } from '../schema/person.mjs';
-import { BaseModel } from './base.mjs';
+import { PersonSchema } from '../schema/person.js';
+import { BaseModel } from './base.js';
 import { applySort, applyPagination, applyFilter } from '../utils/query.js';
-
-/*
-  * This class is responsible for handling the business logic of the person entity.
-  * fields:
-  * id: number
-  * first_name: string
-  * last_name: string
-  * country_code: string
- */
 
 export class Person extends BaseModel {
   constructor() {
-    super('persons')
+    super('persons');
   }
 
-  async get({ q = {}, sort = {}, pagination = {} }) {
+  async get({ q = {}, sort = {}, pagination = {} }: {
+    q?: Record<string, unknown>;
+    sort?: { key?: string; order?: 'asc' | 'desc' };
+    pagination?: { limit?: number; offset?: number };
+  }): Promise<Record<string, unknown>> {
     const { limit, offset } = pagination;
-    const qs = applyFilter(q)(this.getDB());
+    const qs = applyFilter(q)(this.getDB()) as import('knex').Knex.QueryBuilder;
     applySort(sort)(qs);
     applyPagination(pagination)(qs);
     const [total, rs] = await Promise.all([
@@ -30,10 +25,10 @@ export class Person extends BaseModel {
       limit,
       offset,
       data: rs,
-    }
+    };
   }
 
-  async getById(id) {
+  async getById(id: string | number): Promise<Record<string, unknown>> {
     const rs = await this.getDB()
       .join('countries', 'persons.country_code', 'countries.code')
       .join('continents', 'countries.continent_code', 'continents.code')
@@ -50,14 +45,14 @@ export class Person extends BaseModel {
         'countries.currency as currency',
         'countries.alpha_3 as alpha_3',
         'continents.name as continent_name',
-        'continents.code as continent_code'
-      ).first() || {};
+        'continents.code as continent_code',
+      ).first() as Record<string, unknown> || {};
 
-    const res = {
+    const res: Record<string, unknown> = {
       id: rs.id,
       first_name: rs.first_name,
       last_name: rs.last_name,
-    }
+    };
 
     if (rs.country_code) {
       res.country = {
@@ -68,24 +63,24 @@ export class Person extends BaseModel {
         capital: rs.capital,
         currency: rs.currency,
         alpha_3: rs.alpha_3,
-      }
+      };
       if (rs.continent_code) {
-        res.country.continent = {
+        (res.country as Record<string, unknown>).continent = {
           code: rs.continent_code,
           name: rs.continent_name,
-        }
+        };
       }
     }
 
     return res;
   }
 
-  async save(data){
+  async save(data: Record<string, unknown>): Promise<unknown[]> {
     PersonSchema.parse(data);
     return this.getDB().insert(data, ['id', 'first_name', 'last_name', 'country_code']);
   }
 
-  async update(id, data) {
+  async update(id: string | number, data: Record<string, unknown>): Promise<unknown[]> {
     PersonSchema.parse(data);
     return this.getDB().where({ id }).update(data, ['id', 'first_name', 'last_name', 'country_code']);
   }

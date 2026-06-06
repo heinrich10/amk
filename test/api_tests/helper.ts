@@ -1,6 +1,10 @@
 import { expect } from 'expect';
 
-export const paginationHelper = async ({ client, path, params }) => {
+export const paginationHelper = async ({ client, path, params }: {
+  client: { get: (path: string) => { query: (params: Record<string, unknown>) => Promise<{ body: Record<string, unknown>; status: number }> } };
+  path: string;
+  params: Record<string, unknown>;
+}) => {
   const res = await client
     .get(path)
     .query(params);
@@ -12,4 +16,4 @@ export const paginationHelper = async ({ client, path, params }) => {
   expect(body).toHaveProperty('offset');
   expect(body).toHaveProperty('limit');
   return res;
-}
+};
