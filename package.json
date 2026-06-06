@@ -8,7 +8,7 @@
     "build": "tsc",
     "start": "node --env-file=.env dist/app.mjs",
     "dev": "tsx --env-file=.env app.mjs",
-    "test": "c8 tsx --env-file=.env.test --test --test-concurrency=1 test/api_tests/person.test.mjs test/api_tests/country.test.mjs test/api_tests/continents.test.mjs test/unit_tests/utils/query.test.mjs",
+    "test": "c8 tsx --env-file=.env.test --test --test-concurrency=1 **/*.test.mjs",
     "migrate": "knex migrate:latest",
     "seed": "knex seed:run"
   },
