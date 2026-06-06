@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import { expect } from 'expect';
 
-import { extractQueryParams } from '../../../src/utils/query.mjs';
+import { extractQueryParams } from '../../../src/utils/query.js';
 
 describe('utils test', () => {
   describe('extractQueryParams', () => {

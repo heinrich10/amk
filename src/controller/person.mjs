@@ -1,6 +1,6 @@
 import { ValidationError } from '../lib/error.mjs';
 import { PersonSchema } from '../schema/person.mjs';
-import { extract } from '../utils/query.mjs';
+import { extract } from '../utils/query.js';
 
 export class PersonController {
   constructor({ person }) {

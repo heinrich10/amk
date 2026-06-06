@@ -1,4 +1,4 @@
-import { extract } from '../utils/query.mjs';
+import { extract } from '../utils/query.js';
 
 export class CountryController {
   constructor({ country }) {

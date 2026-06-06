@@ -1,6 +1,6 @@
 import { PersonSchema } from '../schema/person.mjs';
 import { BaseModel } from './base.mjs';
-import { applySort, applyPagination, applyFilter } from '../utils/query.mjs';
+import { applySort, applyPagination, applyFilter } from '../utils/query.js';
 
 /*
   * This class is responsible for handling the business logic of the person entity.

@@ -1,5 +1,5 @@
 import { db } from '../lib/db.mjs';
-import { applyFilter } from '../utils/query.mjs';
+import { applyFilter } from '../utils/query.js';
 export class BaseModel {
   constructor(dbName) {
     this.dbName = dbName;
