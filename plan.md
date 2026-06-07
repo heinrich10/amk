@@ -421,6 +421,43 @@ Kysely has no built-in migration CLI. Options:
 
 ---
 
+## Phase 3.5: Linting & Code Quality
+
+**Goal:** Add a working TypeScript-aware linter to enforce code quality and consistency. The project already has an `.eslintrc.js` (pre-TypeScript, unused), but ESLint is not installed and there is no `lint` script.
+
+### What to do
+
+1. **Install dependencies**
+   - `eslint` (core)
+   - `@eslint/js` (recommended rules)
+   - `typescript-eslint` (TypeScript parser + plugin)
+
+2. **Replace `.eslintrc.js` with `eslint.config.mjs`** (flat config format)
+   - Extend `eslint.configs.recommended` and `tseslint.configs.recommended`
+   - Target `src/**/*.ts`, `test/**/*.ts`, `scripts/**/*.ts`, `migrations/**/*.ts`
+   - Key rules:
+     - `@typescript-eslint/no-explicit-any: error`
+     - `no-var: error`
+     - `eqeqeq: [error, smart]`
+     - `no-eq-null: error`
+
+3. **Add `package.json` scripts**
+   - `"lint": "eslint src test scripts migrations"`
+   - `"lint:fix": "eslint src test scripts migrations --fix"`
+
+4. **Fix lint errors**
+   - Run `npm run lint:fix` to auto-fix what it can
+   - Manually fix remaining issues (unused imports, missing `await`, etc.)
+
+### Why now?
+- Phase 2 gave us TypeScript; Phase 3 gave us type-safe queries
+- Adding linting before Phase 4 (DDD refactor) ensures the new architecture is built on clean, consistently styled code
+- Catching issues like unused imports or missing `await` early prevents bugs in the DDD layer
+
+**Exit Criteria:** ✅ `npm run lint` passes with zero errors. All source, test, script, and migration files are covered.
+
+---
+
 ## Phase 4: Domain-Driven Design Architecture (Weeks 6–8)
 
 **Goal:** Restructure the codebase from a technical layered architecture to a domain-centric architecture.
