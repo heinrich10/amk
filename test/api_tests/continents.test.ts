@@ -2,8 +2,8 @@ import { describe, it, beforeEach, afterEach, after } from 'node:test';
 import request from 'supertest';
 import { expect } from 'expect';
 
-import { app } from '../../src/api.mjs';
-import { up, down, teardown } from '../index.mjs';
+import { app } from '../../src/api.js';
+import { up, down, teardown } from '../index.js';
 
 describe('/continents API test', () => {
   beforeEach(async () => {
@@ -22,7 +22,7 @@ describe('/continents API test', () => {
         .expect('Content-Type', /json/)
         .expect(200)
         .then((res) => {
-          const {body} = res;
+          const { body } = res;
           expect(body).toBeInstanceOf(Array);
           expect(body).toHaveLength(7);
         });
@@ -39,7 +39,7 @@ describe('/continents API test', () => {
           expect(body).toBeInstanceOf(Object);
           expect(body).toHaveProperty('code', 'AS');
           expect(body).toHaveProperty('name', 'Asia');
-      });
+        });
     });
     it('Should return 404 if the continent with the given id does not exist', () => {
       return request(app)
@@ -49,7 +49,7 @@ describe('/continents API test', () => {
         .then((res) => {
           const { body } = res;
           expect(body).toEqual({});
-      });
+        });
     });
   });
 });

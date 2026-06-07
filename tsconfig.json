@@ -21,8 +21,8 @@
     "src/**/*",
     "test/**/*",
     "config/**/*",
-    "app.mjs",
-    "knexfile.js"
+    "app.ts",
+    "knexfile.cjs"
   ],
   "exclude": ["node_modules", "dist"]
 }

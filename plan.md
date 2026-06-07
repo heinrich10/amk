@@ -287,36 +287,50 @@ This ensures migrations and queries share the same in-memory database.
 - `tsx` is used for dev and test workflows (no compile step needed)
 - `tsc` is used for production builds (`npm run build` → `dist/`)
 
-### 2.2 File-by-File Migration Strategy
-Rename `.mjs` → `.ts` in this order (query.ts is already done):
-1. ~~`src/utils/query.mjs`~~ ✅ (pure functions, easiest — completed in 2.1)
-2. `src/lib/db.mjs`
-3. `src/schema/*.mjs` (Zod schemas — already typed)
-4. `src/model/base.mjs` → `src/model/base.ts`
-5. `src/model/continent.mjs`, `src/model/country.mjs`, `src/model/person.mjs`
-6. `src/controller/*.mjs`
-7. `src/router/*.mjs` (Express routers)
-8. `src/api.mjs` → `src/api.ts` (Express app factory)
-9. `app.mjs` → `app.ts`
-10. `config/config.mjs` → `config/config.ts`
-11. `test/**/*.mjs` → `test/**/*.ts`
+### 2.2 File-by-File Migration ✅ COMPLETE
 
-### 2.3 Type Definitions to Create
-- Database row types for `continents`, `countries`, `persons`
-- DTO types for API request/response shapes
-- Shared types for pagination envelopes, sort objects, query filters
+**Status:** All `.mjs` source and test files converted to `.ts`. All 27 tests pass. `npm run build` succeeds with zero errors. Source is 100% TypeScript.
 
-### 2.4 Update Test Bootstrap
-- Switch test runner to use `tsx` or compiled output (`node --test` works with both `.mjs` and `.ts`)
-- Rename `.test.mjs` files to `.test.ts`
-- Update `test/index.mjs` to TypeScript (`test/index.ts`)
+**What was done:**
+- Converted all source files from `.mjs` → `.ts`:
+  - `src/lib/db.mjs` → `src/lib/db.ts`
+  - `src/lib/error.mjs` → `src/lib/error.ts`
+  - `src/lib/error-handler.mjs` → `src/lib/error-handler.ts`
+  - `src/schema/*.mjs` → `src/schema/*.ts`
+  - `src/model/base.mjs` → `src/model/base.ts`
+  - `src/model/continent.mjs`, `country.mjs`, `person.mjs` → `.ts`
+  - `src/controller/*.mjs` → `src/controller/*.ts`
+  - `src/router/*.mjs` → `src/router/*.ts`
+  - `src/api.mjs` → `src/api.ts`
+  - `app.mjs` → `app.ts`
+  - `config/config.mjs` → `config/config.ts`
+- Converted all test files from `.test.mjs` → `.test.ts`:
+  - `test/index.mjs` → `test/index.ts`
+  - `test/api_tests/*.test.mjs` → `*.test.ts`
+  - `test/unit_tests/**/*.test.mjs` → `*.test.ts`
+- Added `"type": "module"` to `package.json` so TypeScript `.ts` files compile to ESM.
+- Renamed Knex migration/seed files from `.js` → `.cjs` to keep them as CommonJS:
+  - `migrations/20240302031604_migration.js` → `.cjs`
+  - `seeds/seed_data.js` → `.cjs`
+  - `knexfile.js` → `knexfile.cjs`
+- Updated `package.json` scripts:
+  - `"main": "dist/src/api.js"`, `"types": "dist/src/api.d.ts"`
+  - `"start": "node --env-file=.env dist/app.js"`
+  - `"dev": "tsx --env-file=.env app.ts"`
+  - `"test": "c8 tsx --env-file=.env.test --test --test-concurrency=1 <test-files>"`
+- Updated `tsconfig.json`:
+  - Replaced `"app.mjs"` with `"app.ts"` in `include`
+  - Replaced `"knexfile.js"` with `"knexfile.cjs"` in `include`
 
-### 2.5 Fix Type Errors Without Logic Changes
-- Add `// @ts-expect-error` comments where Knex types are weak (will be fixed in Phase 3)
-- Use explicit `any` temporarily for Knex query results
-- Keep all existing runtime behavior identical
+**Type annotations added:**
+- Express `Request`, `Response`, `ErrorRequestHandler` for controllers/routers/error handler
+- `Knex.QueryBuilder` for `BaseModel.getDB()` and model query chains
+- Inline constructor param types for controllers and models
+- Cast `req.params.code` with `String()` to handle `string | string[]` Express typing
+- Used `as Knex.QueryBuilder` at `applyFilter` call sites where generic inference was weak (to be fixed in Phase 3)
+- Added `src/types.d.ts` with `declare module 'response-time'` for missing types
 
-**Exit Criteria:** `npm run build` succeeds with zero errors. `npm test` passes. Source is 100% TypeScript.
+**Exit Criteria:** ✅ `npm run build` succeeds with zero errors. `npm test` passes (27/27). Source is 100% TypeScript.
 
 ---
 
