@@ -377,8 +377,8 @@ For each model, rewrite Knex queries as Kysely queries:
 - `Person.getById()` → `db.selectFrom('persons').innerJoin('countries', ...).innerJoin('continents', ...)...`
 
 ### 3.5 Update Query Utilities
-- Rewrite `applyFilter`, `applySort`, `applyPagination` as Kysely query transformer functions
-- These will use Kysely's expression builder instead of Knex's chainable API
+- Rewrite `applyFilter` as a generic Kysely `ExpressionBuilder` callback using `sql.ref(key)` for column references
+- Remove `applySort` and `applyPagination` — Kysely's fluent API and strong typing make generic chainable helpers impractical; sorting and pagination are inlined directly in each model's query chain
 
 ### 3.6 Migration System Decision
 Kysely has no built-in migration CLI. Options:
@@ -409,13 +409,13 @@ Kysely has no built-in migration CLI. Options:
 - Deleted `src/lib/db.ts` (old Knex singleton)
 - Rewrote all models to use Kysely queries (`selectFrom`, `insertInto`, `updateTable`, `innerJoin`)
 - Deleted `src/model/base.ts` — Kysely's strong typing makes a generic `BaseModel` impractical; `getCount` is inlined per model
-- Rewrote `src/utils/query.ts`: `applyFilter` returns an `ExpressionBuilder` callback using `sql.ref(key)`; `applySort` and `applyPagination` are generic `SelectQueryBuilder` transformers
+- Rewrote `src/utils/query.ts`: `applyFilter` returns a generic `ExpressionBuilder` callback using `sql.ref(key)`; `applySort` and `applyPagination` were removed and inlined in model query chains
 - Converted Knex migration to Kysely format: `migrations/20240302031604_initial.ts`
 - Created seed data as a versioned Kysely migration: `migrations/20240302031605_seed_data.ts`
-- Created `scripts/migrate.ts` using Kysely's `Migrator` + `FileMigrationProvider`
+- Created `scripts/migrate.ts` using Kysely's `Migrator` + `FileMigrationProvider` — supports `latest`, `down`, and `reset` commands
 - Rewrote `test/index.ts` to use Kysely's `Migrator` API (`migrateToLatest` / `migrateTo('no_migrations')`)
 - Removed `knexfile.cjs`, `seeds/seed_data.cjs`, and `seeds/` directory
-- Updated `package.json`: removed `knex` dependency, removed `"seed"` script, updated `"migrate"` to `tsx scripts/migrate.ts`
+- Updated `package.json`: removed `knex` dependency, removed `"seed"` script, added `"migrate"`, `"migrate:down"`, and `"migrate:reset"` scripts
 - Updated `tsconfig.json`: removed `knexfile.cjs` from `include`
 - Updated `AGENTS.md` to reflect Kysely architecture
 

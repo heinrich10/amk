@@ -37,7 +37,7 @@ AMK is a minimal, no-frills REST API server built with **Express.js 5**, **Kysel
 ├── src/
 │   ├── api.ts              # Express app factory — wires routers, middleware, models
 │   ├── controller/         # Request/response handlers (one per entity)
-│   ├── model/              # Business logic & DB queries (one per entity + base class)
+│   ├── model/              # Business logic & DB queries (one per entity)
 │   ├── router/             # Express route definitions (one per entity)
 │   ├── schema/             # Zod schemas for request validation
 │   ├── lib/                # Shared infrastructure (DB connection, error handling)
@@ -50,8 +50,7 @@ AMK is a minimal, no-frills REST API server built with **Express.js 5**, **Kysel
 │   └── config.ts           # Centralized config object (reads `process.env.DB`)
 ├── migrations/
 │   ├── 20240302031604_initial.ts   # Kysely schema migration
-│   ├── 20240302031605_seed_data.ts # Kysely seed data migration
-│   └── seed-data.ts                # Seed data exported for migration
+│   └── 20240302031605_seed_data.ts # Kysely seed data migration
 ├── scripts/
 │   └── migrate.ts          # Kysely migration runner
 ├── package.json            # Dependencies and npm scripts
@@ -107,17 +106,19 @@ All commands are run via `npm`:
 npm install
 
 # Build TypeScript to dist/
-npm run build      # Runs tsc — compiles src/ and test/ into dist/
+npm run build          # Runs tsc — compiles src/ and test/ into dist/
 
 # Start the development server (listens on port 3000)
-npm start          # Runs compiled output: node --env-file=.env dist/app.js
-npm run dev        # Runs directly via tsx: tsx --env-file=.env app.ts
+npm start              # Runs compiled output: node --env-file=.env dist/app.js
+npm run dev            # Runs directly via tsx: tsx --env-file=.env app.ts
 
 # Run the test suite with coverage
-npm test           # Equivalent to: c8 tsx --env-file=.env.test --test --test-concurrency=1 <test-files>
+npm test               # Equivalent to: c8 tsx --env-file=.env.test --test --test-concurrency=1 **/*.test.ts
 
 # Run Kysely migrations
-npm run migrate    # Equivalent to: tsx scripts/migrate.ts
+npm run migrate        # Run all pending migrations
+npm run migrate:down   # Roll back one migration
+npm run migrate:reset  # Roll back all migrations
 ```
 
 ### Test Setup
@@ -162,7 +163,7 @@ ESLint is configured in `.eslintrc.js` with the following notable rules:
 - Controllers are **classes** with async methods.
 - Models work directly with Kysely query builder. No `BaseModel` — Kysely's strong typing makes generic table-agnostic repositories impractical for this small codebase.
 - Routers are factory functions that receive a controller instance and return an Express router.
-- Native arrow functions are used for functional composition (manual `applyFilter` → `applySort` → `applyPagination` chaining).
+- `applyFilter` is a generic Kysely `ExpressionBuilder` callback. Sorting and pagination are inlined directly in model query chains (no generic `applySort`/`applyPagination` helpers).
 
 ## Security Considerations
 
