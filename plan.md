@@ -397,10 +397,27 @@ Kysely has no built-in migration CLI. Options:
 
 ### 3.8 Remove Knex
 - Uninstall `knex`
-- Delete `knexfile.js`
+- Delete `knexfile.cjs`
 - Update `package.json` scripts
 
-**Exit Criteria:** No Knex references remain. All queries compile with full type safety. All tests pass.
+**Exit Criteria:** ✅ No Knex references remain. All queries compile with full type safety. All tests pass.
+
+**What was done:**
+- Installed `kysely` and `kysely-codegen`
+- Generated `src/db-schema.ts` from existing SQLite DB using `kysely-codegen`
+- Created `src/lib/kysely.ts` with Kysely `SqliteDialect` using a shared `better-sqlite3` `Database` instance
+- Deleted `src/lib/db.ts` (old Knex singleton)
+- Rewrote all models to use Kysely queries (`selectFrom`, `insertInto`, `updateTable`, `innerJoin`)
+- Deleted `src/model/base.ts` — Kysely's strong typing makes a generic `BaseModel` impractical; `getCount` is inlined per model
+- Rewrote `src/utils/query.ts`: `applyFilter` returns an `ExpressionBuilder` callback using `sql.ref(key)`; `applySort` and `applyPagination` are generic `SelectQueryBuilder` transformers
+- Converted Knex migration to Kysely format: `migrations/20240302031604_initial.ts`
+- Created seed data as a versioned Kysely migration: `migrations/20240302031605_seed_data.ts`
+- Created `scripts/migrate.ts` using Kysely's `Migrator` + `FileMigrationProvider`
+- Rewrote `test/index.ts` to use Kysely's `Migrator` API (`migrateToLatest` / `migrateTo('no_migrations')`)
+- Removed `knexfile.cjs`, `seeds/seed_data.cjs`, and `seeds/` directory
+- Updated `package.json`: removed `knex` dependency, removed `"seed"` script, updated `"migrate"` to `tsx scripts/migrate.ts`
+- Updated `tsconfig.json`: removed `knexfile.cjs` from `include`
+- Updated `AGENTS.md` to reflect Kysely architecture
 
 ---
 
