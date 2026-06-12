@@ -3,7 +3,7 @@
 Minimal REST API server using Express.js 5, Kysely, and SQLite3. Written in TypeScript.
 
 ## Pre-requisites
-- Node.js 20+
+- Node.js 22+
 
 ## How to run
 1. Install dependencies: `npm install`
@@ -42,7 +42,7 @@ Migrations live in `migrations/` as TypeScript files and are executed via `tsx`.
 2. Run `npm test`
 
 ### Test stack
-- `node:test` — built-in test runner (Node 20+)
+- `node:test` — built-in test runner (Node 22+)
 - `expect` — standalone assertion library (Jest-style)
 - `supertest` — HTTP-level integration testing
 - `c8` — V8 coverage reporting

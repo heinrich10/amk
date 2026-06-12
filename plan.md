@@ -413,7 +413,7 @@ Kysely has no built-in migration CLI. Options:
 - Converted Knex migration to Kysely format: `migrations/20240302031604_initial.ts`
 - Created seed data as a versioned Kysely migration: `migrations/20240302031605_seed_data.ts`
 - Created `scripts/migrate.ts` using Kysely's `Migrator` + `FileMigrationProvider` — supports `latest`, `down`, and `reset` commands
-- Rewrote `test/index.ts` to use Kysely's `Migrator` API (`migrateToLatest` / `migrateTo('no_migrations')`)
+- Rewrote `test/index.ts` to use Kysely's `Migrator` API (`migrateToLatest` / `migrateTo(NO_MIGRATIONS)`)
 - Removed `knexfile.cjs`, `seeds/seed_data.cjs`, and `seeds/` directory
 - Updated `package.json`: removed `knex` dependency, removed `"seed"` script, added `"migrate"`, `"migrate:down"`, and `"migrate:reset"` scripts
 - Updated `tsconfig.json`: removed `knexfile.cjs` from `include`

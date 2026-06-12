@@ -1,6 +1,7 @@
 import { Kysely, sql } from 'kysely';
+import { DB } from '../src/db-schema.js';
 
-export async function up(db: Kysely<any>): Promise<void> {
+export async function up(db: Kysely<DB>): Promise<void> {
   await db.schema
     .createTable('continents')
     .addColumn('code', 'varchar', (col) => col.primaryKey())
@@ -28,7 +29,7 @@ export async function up(db: Kysely<any>): Promise<void> {
     .execute();
 }
 
-export async function down(db: Kysely<any>): Promise<void> {
+export async function down(db: Kysely<DB>): Promise<void> {
   await db.schema.dropTable('persons').execute();
   await db.schema.dropTable('countries').execute();
   await db.schema.dropTable('continents').execute();

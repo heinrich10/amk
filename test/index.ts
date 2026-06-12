@@ -1,6 +1,6 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { FileMigrationProvider, Migrator } from 'kysely/migration';
+import { FileMigrationProvider, Migrator, NO_MIGRATIONS } from 'kysely/migration';
 import { db } from '../src/lib/kysely.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -16,11 +16,17 @@ const migrator = new Migrator({
 });
 
 export const up = async () => {
-  await migrator.migrateToLatest();
+  const { error } = await migrator.migrateToLatest();
+  if (error) {
+    throw error;
+  }
 };
 
 export const down = async () => {
-  await migrator.migrateTo('no_migrations');
+  const { error } = await migrator.migrateTo(NO_MIGRATIONS);
+  if (error) {
+    throw error;
+  }
 };
 
 export const teardown = async () => {

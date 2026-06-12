@@ -1,6 +1,6 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { FileMigrationProvider, Migrator } from 'kysely/migration';
+import { FileMigrationProvider, Migrator, NO_MIGRATIONS } from 'kysely/migration';
 import { db } from '../src/lib/kysely.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -26,7 +26,7 @@ async function run() {
   } else if (command === 'down') {
     ({ error, results } = await migrator.migrateDown());
   } else if (command === 'reset') {
-    ({ error, results } = await migrator.migrateTo('no_migrations'));
+    ({ error, results } = await migrator.migrateTo(NO_MIGRATIONS));
   } else {
     console.error(`Unknown command: ${command}`);
     console.error('Usage: tsx scripts/migrate.ts [latest|up|down|reset]');

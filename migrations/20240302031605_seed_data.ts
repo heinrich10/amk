@@ -1,6 +1,7 @@
 import { Kysely } from 'kysely';
+import { DB } from '../src/db-schema.js';
 
-export async function up(db: Kysely<any>): Promise<void> {
+export async function up(db: Kysely<DB>): Promise<void> {
   await db.insertInto('continents').values([
     {
       "code": "AF",
@@ -2573,7 +2574,7 @@ export async function up(db: Kysely<any>): Promise<void> {
   ]).execute();
 }
 
-export async function down(db: Kysely<any>): Promise<void> {
+export async function down(db: Kysely<DB>): Promise<void> {
   await db.deleteFrom('persons').execute();
   await db.deleteFrom('countries').execute();
   await db.deleteFrom('continents').execute();
