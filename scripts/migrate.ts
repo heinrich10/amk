@@ -44,4 +44,7 @@ async function run() {
   await db.destroy();
 }
 
-run().catch(console.error);
+run().catch((err: unknown) => {
+  console.error(err);
+  process.exitCode = 1;
+});

@@ -5,5 +5,3 @@ export const Config = {
   DB,
   NODE_ENV,
 } as const;
-
-export const env = Config;

@@ -5,27 +5,15 @@ import { expect } from 'expect';
 import { app } from '../../src/api.js';
 import { up, down, teardown } from '../index.js';
 import { paginationHelper as pgHelper } from './helper.js';
+import { CountryItem, PaginatedResponse } from '../../src/types/api-response.js';
 
 const DEFAULT_LIMIT = 10;
 const DEFAULT_OFFSET = 0;
 const DEFAULT_LENGTH = 252;
 
-interface CountryItem {
-  code: string;
-  name: string;
-  continent?: { code: string; name: string };
-}
-
-interface PaginatedResponse {
-  data: CountryItem[];
-  total: number;
-  offset: number;
-  limit: number;
-}
-
 const paginationHelper = async ({ path, params }: { path: string; params: Record<string, unknown> }) => {
   const res = await pgHelper({ client: request(app), path, params });
-  const body = res.body as PaginatedResponse;
+  const body = res.body as PaginatedResponse<CountryItem>;
   const [first] = body.data;
   expect(first).toHaveProperty('code');
   expect(first).toHaveProperty('name');
@@ -46,7 +34,7 @@ describe('/countries API test', () => {
   describe('GET /countries', () => {
     it('Should return first 10 countries if no limit is provided', async () => {
       const res = await paginationHelper({ path: '/countries', params: {} });
-      const body = res.body as PaginatedResponse;
+      const body = res.body as PaginatedResponse<CountryItem>;
       const { data, total, offset, limit } = body;
       const [first] = data;
       expect(total).toBe(DEFAULT_LENGTH);
@@ -60,7 +48,7 @@ describe('/countries API test', () => {
       const argOffset = 10;
       const params = { limit: DEFAULT_LIMIT, offset: argOffset };
       const res = await paginationHelper({ path: '/countries', params });
-      const body = res.body as PaginatedResponse;
+      const body = res.body as PaginatedResponse<CountryItem>;
       const { data, total, offset, limit } = body;
       const [first] = data;
       expect(total).toBe(DEFAULT_LENGTH);
@@ -74,7 +62,7 @@ describe('/countries API test', () => {
       const argLimit = 1;
       const params = { limit: argLimit, offset: DEFAULT_OFFSET };
       const res = await paginationHelper({ path: '/countries', params });
-      const body = res.body as PaginatedResponse;
+      const body = res.body as PaginatedResponse<CountryItem>;
       const { data, total, offset, limit } = body;
       const [first] = data;
       expect(total).toBe(DEFAULT_LENGTH);
@@ -89,7 +77,7 @@ describe('/countries API test', () => {
       const argLimit = 1;
       const params = { limit: argLimit, offset: DEFAULT_OFFSET, sort: argSort };
       const res = await paginationHelper({ path: '/countries', params });
-      const body = res.body as PaginatedResponse;
+      const body = res.body as PaginatedResponse<CountryItem>;
       const { data, total, offset, limit } = body;
       const [first] = data;
       expect(total).toBe(DEFAULT_LENGTH);
@@ -104,7 +92,7 @@ describe('/countries API test', () => {
       const argLimit = 1;
       const params = { limit: argLimit, offset: DEFAULT_OFFSET, sort: argSort };
       const res = await paginationHelper({ path: '/countries', params });
-      const body = res.body as PaginatedResponse;
+      const body = res.body as PaginatedResponse<CountryItem>;
       const { data, total, offset, limit } = body;
       const [first] = data;
       expect(total).toBe(DEFAULT_LENGTH);
@@ -119,7 +107,7 @@ describe('/countries API test', () => {
       const argLimit = 1;
       const params = { limit: argLimit, offset: DEFAULT_OFFSET, ...argQ };
       const res = await paginationHelper({ path: '/countries', params });
-      const body = res.body as PaginatedResponse;
+      const body = res.body as PaginatedResponse<CountryItem>;
       const { data, total, offset, limit } = body;
       const [first] = data;
       expect(total).toBe(5);
@@ -134,7 +122,7 @@ describe('/countries API test', () => {
       const argLimit = 1;
       const params = { limit: argLimit, offset: DEFAULT_OFFSET, ...argQ };
       const res = await paginationHelper({ path: '/countries', params });
-      const body = res.body as PaginatedResponse;
+      const body = res.body as PaginatedResponse<CountryItem>;
       const { data, total, offset, limit } = body;
       const [first] = data;
       expect(total).toBe(DEFAULT_LENGTH);

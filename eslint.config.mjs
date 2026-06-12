@@ -12,7 +12,7 @@ export default defineConfig([
       },
       parser: tseslint.parser,
       parserOptions: {
-        project: "./tsconfig.json",
+        projectService: true,
       },
     },
     plugins: {

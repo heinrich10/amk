@@ -5,32 +5,15 @@ import { expect } from 'expect';
 import { app } from '../../src/api.js';
 import { up, down, teardown } from '../index.js';
 import { paginationHelper as pgHelper } from './helper.js';
+import { ErrorResponse, PersonItem, PaginatedResponse } from '../../src/types/api-response.js';
 
 const DEFAULT_LIMIT = 10;
 const DEFAULT_OFFSET = 0;
 const DEFAULT_LENGTH = 13;
 
-interface PersonItem {
-  id: number;
-  first_name: string;
-  country?: { continent?: Record<string, unknown> };
-}
-
-interface PaginatedResponse {
-  data: PersonItem[];
-  total: number;
-  offset: number;
-  limit: number;
-}
-
-interface ErrorResponse {
-  message: string;
-  errors?: unknown[];
-}
-
 const paginationHelper = async ({ path, params }: { path: string; params: Record<string, unknown> }) => {
   const res = await pgHelper({ client: request(app), path, params });
-  const body = res.body as PaginatedResponse;
+  const body = res.body as PaginatedResponse<PersonItem>;
   const [first] = body.data;
   expect(first).not.toHaveProperty('country');
   return res;
@@ -47,9 +30,9 @@ describe('/persons API test', () => {
     await teardown();
   });
   describe('GET /persons', () => {
-    it('Should return first 10 countries if no limit is provided', async () => {
+    it('Should return first 10 persons if no limit is provided', async () => {
       const res = await paginationHelper({ path: '/persons', params: {} });
-      const body = res.body as PaginatedResponse;
+      const body = res.body as PaginatedResponse<PersonItem>;
       const { data, total, offset, limit } = body;
       const [first] = data;
       expect(total).toBe(DEFAULT_LENGTH);
@@ -59,11 +42,11 @@ describe('/persons API test', () => {
       expect(first).toHaveProperty('id', 1);
       expect(first).toHaveProperty('first_name', 'John');
     });
-    it('Should return next 3 countries if limit and offset is 10', async () => {
+    it('Should return next 3 persons if limit and offset is 10', async () => {
       const argOffset = 10;
       const params = { limit: DEFAULT_LIMIT, offset: argOffset };
       const res = await paginationHelper({ path: '/persons', params });
-      const body = res.body as PaginatedResponse;
+      const body = res.body as PaginatedResponse<PersonItem>;
       const { data, total, offset, limit } = body;
       const [first] = data;
       expect(total).toBe(DEFAULT_LENGTH);
@@ -77,7 +60,7 @@ describe('/persons API test', () => {
       const argLimit = 1;
       const params = { limit: argLimit, offset: DEFAULT_OFFSET };
       const res = await paginationHelper({ path: '/persons', params });
-      const body = res.body as PaginatedResponse;
+      const body = res.body as PaginatedResponse<PersonItem>;
       const { data, total, offset, limit } = body;
       const [first] = data;
       expect(total).toBe(DEFAULT_LENGTH);
@@ -92,7 +75,7 @@ describe('/persons API test', () => {
       const argLimit = 1;
       const params = { limit: argLimit, offset: DEFAULT_OFFSET, sort: argSort };
       const res = await paginationHelper({ path: '/persons', params });
-      const body = res.body as PaginatedResponse;
+      const body = res.body as PaginatedResponse<PersonItem>;
       const { data, total, offset, limit } = body;
       const [first] = data;
       expect(total).toBe(DEFAULT_LENGTH);
@@ -107,7 +90,7 @@ describe('/persons API test', () => {
       const argLimit = 1;
       const params = { limit: argLimit, offset: DEFAULT_OFFSET, sort: argSort };
       const res = await paginationHelper({ path: '/persons', params });
-      const body = res.body as PaginatedResponse;
+      const body = res.body as PaginatedResponse<PersonItem>;
       const { data, total, offset, limit } = body;
       const [first] = data;
       expect(total).toBe(DEFAULT_LENGTH);
@@ -122,7 +105,7 @@ describe('/persons API test', () => {
       const argLimit = 1;
       const params = { limit: argLimit, offset: DEFAULT_OFFSET, ...argQ };
       const res = await paginationHelper({ path: '/persons', params });
-      const body = res.body as PaginatedResponse;
+      const body = res.body as PaginatedResponse<PersonItem>;
       const { data, total, offset, limit } = body;
       const [first] = data;
       expect(total).toBe(2);
@@ -137,7 +120,7 @@ describe('/persons API test', () => {
       const argLimit = 1;
       const params = { limit: argLimit, offset: DEFAULT_OFFSET, ...argQ };
       const res = await paginationHelper({ path: '/persons', params });
-      const body = res.body as PaginatedResponse;
+      const body = res.body as PaginatedResponse<PersonItem>;
       const { data, total, offset, limit } = body;
       const [first] = data;
       expect(total).toBe(DEFAULT_LENGTH);
@@ -185,7 +168,7 @@ describe('/persons API test', () => {
     });
   });
   describe('GET /persons/:id', () => {
-    it('Should return a continent with the given id', async () => {
+    it('Should return a person with the given id', async () => {
       const res = await request(app)
         .get('/persons/1')
         .expect('Content-Type', /json/)
@@ -197,7 +180,7 @@ describe('/persons API test', () => {
       expect(body).toHaveProperty('country');
       expect(body.country).toHaveProperty('continent');
     });
-    it('Should return 404 if the continent with the given id does not exist', async () => {
+    it('Should return 404 if the person with the given id does not exist', async () => {
       const res = await request(app)
         .get('/persons/99')
         .expect('Content-Type', /json/)

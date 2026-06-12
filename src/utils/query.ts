@@ -51,13 +51,13 @@ export const applyFilter = <DB, TB extends keyof DB>(q: Record<string, unknown>)
   return (eb: ExpressionBuilder<DB, TB>) => {
     const conditions = [];
     for (const [key, value] of Object.entries(q)) {
-      if (value !== undefined && value !== null && value !== '') {
-        const strValue = typeof value === 'string' ? value : JSON.stringify(value);
-        if (/.*name.*/.test(key)) {
-          conditions.push(eb(sql.ref(key), 'like', `%${strValue.toLowerCase()}%`));
-        } else {
-          conditions.push(eb(sql.ref(key), '=', strValue));
-        }
+      if (typeof value !== 'string' || value === '') {
+        continue;
+      }
+      if (/.*name.*/.test(key)) {
+        conditions.push(eb(sql.ref(key), 'like', `%${value.toLowerCase()}%`));
+      } else {
+        conditions.push(eb(sql.ref(key), '=', value));
       }
     }
     if (conditions.length === 0) {

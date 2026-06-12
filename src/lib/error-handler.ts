@@ -1,17 +1,10 @@
 import { ErrorRequestHandler } from 'express';
-import { env } from '../../config/config.js';
-
-interface AppError {
-  statusCode?: number;
-  message: string;
-  name?: string;
-  errors?: unknown;
-  stack?: string;
-}
+import { Config } from '../../config/config.js';
+import { HttpError } from '../types/error.js';
 
 export const errorHandler = (): ErrorRequestHandler => {
   return (err, _req, res, _next) => {
-    const appErr = err as AppError;
+    const appErr = err as HttpError;
     const statusCode = appErr.statusCode ?? 500;
     const message = appErr.message || 'Internal Server Error';
 
@@ -21,7 +14,7 @@ export const errorHandler = (): ErrorRequestHandler => {
       response.errors = appErr.errors;
     }
 
-    if (env.NODE_ENV !== 'production') {
+    if (Config.NODE_ENV !== 'production') {
       response.stack = appErr.stack;
     }
 

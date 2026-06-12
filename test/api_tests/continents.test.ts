@@ -4,11 +4,7 @@ import { expect } from 'expect';
 
 import { app } from '../../src/api.js';
 import { up, down, teardown } from '../index.js';
-
-interface ContinentResponse {
-  code: string;
-  name: string;
-}
+import { ContinentResponse } from '../../src/types/api-response.js';
 
 describe('/continents API test', () => {
   beforeEach(async () => {
