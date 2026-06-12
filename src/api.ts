@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Express } from 'express';
 import responseTime from 'response-time';
 
 import { ContinentController } from './controller/continent.js';
@@ -15,7 +15,7 @@ import { personRouter } from './router/person.js';
 
 import { errorHandler } from './lib/error-handler.js';
 
-const app = express();
+const app: Express = express();
 
 const continent = new Continent();
 const country = new Country();

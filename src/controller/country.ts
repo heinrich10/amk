@@ -18,7 +18,7 @@ export class CountryController {
   async getAll(req: Request, res: Response) {
     const { query } = req;
     const validKeys = ['name', 'phone', 'symbol', 'capital', 'currency', 'continent_code', 'alpha_3'];
-    const [q, sort, pagination] = extract(query as Record<string, unknown>, validKeys);
+    const [q, sort, pagination] = extract(query, validKeys);
     const country = await this.country.get({ q, sort, pagination });
     res.json(country);
   }

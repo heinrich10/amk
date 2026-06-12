@@ -4,7 +4,7 @@ This document is for AI coding agents working on the AMK repository. It describe
 
 ## Project Overview
 
-AMK is a minimal, no-frills REST API server built with **Express.js**, **Knex.js**, and **better-sqlite3**. It demonstrates a layered backend architecture for three related entities: `persons`, `countries`, and `continents`. The project uses **TypeScript** (`.ts`) and targets Node.js 20+ (see `Dockerfile`).
+AMK is a minimal, no-frills REST API server built with **Express.js 5**, **Kysely**, and **better-sqlite3**. It demonstrates a layered backend architecture for three related entities: `persons`, `countries`, and `continents`. The project uses **TypeScript** (`.ts`) and targets Node.js 20+ (see `Dockerfile`).
 
 - **Repository**: https://github.com/amkjs/amk
 - **License**: Apache-2.0
@@ -18,13 +18,13 @@ AMK is a minimal, no-frills REST API server built with **Express.js**, **Knex.js
 |-------|------------|
 | Language | TypeScript |
 | HTTP Framework | Express.js 5 |
-| Query Builder / ORM | Knex.js 3 |
+| Query Builder / ORM | Kysely |
 | Database | SQLite3 via `better-sqlite3` |
 | Validation | Zod |
 | Async Error Handling | Express 5 native |
-| Testing | `node:test`, `expect`, Supertest 6 |
+| Testing | `node:test`, `expect`, Supertest 7 |
 | Coverage | c8 9 |
-| Linting | ESLint (eslint:recommended + custom rules) |
+| Linting | ESLint flat config (`eslint.config.mjs`) with `typescript-eslint` strict + stylistic type-checked rules |
 | Environment Config | Node.js `--env-file` |
 | Functional Utilities | Native ES2022 |
 | TS Loader (dev/test) | tsx |
@@ -37,10 +37,11 @@ AMK is a minimal, no-frills REST API server built with **Express.js**, **Knex.js
 ├── src/
 │   ├── api.ts              # Express app factory — wires routers, middleware, models
 │   ├── controller/         # Request/response handlers (one per entity)
-│   ├── model/              # Business logic & DB queries (one per entity + base class)
+│   ├── model/              # Business logic & DB queries (one per entity)
 │   ├── router/             # Express route definitions (one per entity)
 │   ├── schema/             # Zod schemas for request validation
 │   ├── lib/                # Shared infrastructure (DB connection, error handling)
+│   ├── types/              # Shared application types (API responses, errors)
 │   └── utils/              # Pure helper functions (query parsing, filtering, etc.)
 ├── test/
 │   ├── api_tests/          # Integration / HTTP-level tests (*.test.ts)
@@ -49,13 +50,13 @@ AMK is a minimal, no-frills REST API server built with **Express.js**, **Knex.js
 ├── config/
 │   └── config.ts           # Centralized config object (reads `process.env.DB`)
 ├── migrations/
-│   └── *.cjs               # Knex migration files
-├── seeds/
-│   └── seed_data.cjs       # Seed script for continents, countries, and persons
-├── knexfile.cjs            # Knex configuration (development + test environments)
+│   ├── 20240302031604_initial.ts   # Kysely schema migration
+│   └── 20240302031605_seed_data.ts # Kysely seed data migration
+├── scripts/
+│   └── migrate.ts          # Kysely migration runner
 ├── package.json            # Dependencies and npm scripts
 ├── .c8rc                   # Coverage reporter configuration
-├── .eslintrc.js            # Linting rules
+├── eslint.config.mjs       # ESLint flat config (type-aware rules)
 └── Dockerfile              # Node 20 Alpine container image
 ```
 
@@ -65,9 +66,9 @@ The codebase follows a **layered architecture**:
 
 1. **Router** (`src/router/*.ts`) — Defines Express routes. Controller methods are bound to their instance (`.bind(controller)`) so `this` context is preserved. Express 5 catches async errors natively.
 2. **Controller** (`src/controller/*.ts`) — Extracts query/body/params from `req`, delegates to models, and writes to `res`. Performs Zod validation for write operations.
-3. **Model** (`src/model/*.ts`) — Contains business logic and database queries. All models extend `BaseModel` (`src/model/base.ts`), which provides a Knex query builder instance via `getDB()` and a generic `getCount()` helper.
+3. **Model** (`src/model/*.ts`) — Contains business logic and database queries. Each model uses the Kysely singleton (`src/lib/kysely.ts`) directly. `getCount()` is inlined per model because Kysely's compile-time typing makes a generic table-agnostic base class impractical.
 4. **Schema** (`src/schema/*.ts`) — Zod schemas for runtime validation and type inference.
-5. **Lib** (`src/lib/*.ts`) — Singletons for the Knex connection (`db.ts`) and shared error classes / error handler.
+5. **Lib** (`src/lib/*.ts`) — Singletons for the Kysely connection (`kysely.ts`) and shared error classes / error handler.
 6. **Utils** (`src/utils/*.ts`) — Pure, reusable functions. `query.ts` implements filtering, sorting, and pagination helpers using native arrow functions.
 
 ### Dependency Injection Pattern
@@ -106,64 +107,76 @@ All commands are run via `npm`:
 npm install
 
 # Build TypeScript to dist/
-npm run build      # Runs tsc — compiles src/ and test/ into dist/
+npm run build          # Runs tsc — compiles src/ and test/ into dist/
 
 # Start the development server (listens on port 3000)
-npm start          # Runs compiled output: node --env-file=.env dist/app.js
-npm run dev        # Runs directly via tsx: tsx --env-file=.env app.ts
+npm start              # Runs compiled output: node --env-file=.env dist/app.js
+npm run dev            # Runs directly via tsx: tsx --env-file=.env app.ts
 
 # Run the test suite with coverage
-npm test           # Equivalent to: c8 tsx --env-file=.env.test --test --test-concurrency=1 <test-files>
+npm test               # Equivalent to: c8 tsx --env-file=.env.test --test --test-concurrency=1 **/*.test.ts
 
-# Run Knex migrations
-npm run migrate    # Equivalent to: knex migrate:latest
+# Run lint checks
+npm run lint           # Check for lint and type-aware errors
+npm run lint:fix       # Auto-fix lint issues where possible
 
-# Run seed script
-npm run seed       # Equivalent to: knex seed:run
+# Run Kysely migrations
+npm run migrate        # Run all pending migrations
+npm run migrate:down   # Roll back one migration
+npm run migrate:reset  # Roll back all migrations
 ```
 
 ### Test Setup
 
 - `node --test` auto-discovers `*.test.js` files natively, but **not** `*.test.ts`. Test files are run via `tsx` with an explicit file list.
-- `test/index.ts` exports `up()`, `down()`, and `teardown()` for Knex migrations/seeds.
+- `test/index.ts` exports `up()`, `down()`, and `teardown()` for Kysely migrations.
 - Each test file imports `up`/`down`/`teardown` and manages its own lifecycle hooks (`beforeEach`/`afterEach`/`after`).
 - API tests live in `test/api_tests/*.test.ts` and use **Supertest** against the Express app exported from `src/api.ts`.
 - Unit tests live in `test/unit_tests/**/*.test.ts`.
-- Tests must run sequentially (`--test-concurrency=1`) because all files share a singleton Knex instance backed by a single `:memory:` SQLite database.
+- Tests must run sequentially (`--test-concurrency=1`) because all files share a singleton Kysely instance backed by a single `:memory:` SQLite database.
 - c8 is configured with `all: true` and reporters `lcov` + `text-summary`.
 
 ## Database
 
-- **Development**: SQLite3 file (`./dbdev.sqlite3.db`) — configurable via `DB` env var (see `config/config.ts`).
-- **Test**: SQLite3 `:memory:` database (see `knexfile.cjs`).
-- **Driver**: `better-sqlite3` via Knex. Replaced the deprecated `sqlite3` package.
-- **Pool constraint for `:memory:`**: The singleton `db` instance uses `pool: { min: 1, max: 1 }` when `DB` is `:memory:`. `better-sqlite3` creates a separate in-memory database per connection; restricting the pool ensures migrations and queries share the same database.
+- **Development**: SQLite3 file (`./dbdev.sqlite3.db`) — configurable via `DB` env var. `NODE_ENV` is also centralized in `config/config.ts` (see `Config.DB` and `Config.NODE_ENV`).
+- **Test**: SQLite3 `:memory:` database.
+- **Driver**: `better-sqlite3` via Kysely. Replaced the deprecated `sqlite3` package.
+- **Pool constraint for `:memory:`**: Kysely's `SqliteDialect` accepts a shared `better-sqlite3` `Database` instance directly. This ensures migrations and queries share the same in-memory database without connection-pool configuration.
 - **Foreign keys**: `better-sqlite3` enforces foreign keys by default. Seed data deletion order must respect FK constraints (`persons` → `countries` → `continents`).
-- Migrations and seeds are standard Knex files in `migrations/` and `seeds/`.
+- Migrations are Kysely `.ts` files in `migrations/` using Kysely's built-in `Migrator` API with `FileMigrationProvider`.
+- Seed data is a versioned migration (`20240302031605_seed_data.ts`) rather than a separate seed script.
 - Schema consists of three tables: `continents`, `countries`, `persons` with foreign-key relationships.
 
 ## Code Style Guidelines
 
-ESLint is configured in `.eslintrc.js` with the following notable rules:
+ESLint is configured as a flat config in `eslint.config.mjs` with the following notable setup:
 
-- `ecmaVersion: 2022`, `sourceType: "module"`
-- `strict: [2, 'global']`
-- `no-var: 2` — use `const` / `let`
-- `eqeqeq: [2, 'smart']` and `no-eq-null: 2`
-- `callback-return: 2`
-- `no-process-env: 2` — environment variables should be read in `config/` only
-- `no-process-exit: 2`
-- `global-require: 2`
-- `default-case: 2`
+- Targets `src/**/*.ts`, `test/**/*.ts`, `scripts/**/*.ts`, and `migrations/**/*.ts`
+- Extends `js.configs.recommended`, `tseslint.configs.strictTypeChecked`, and `tseslint.configs.stylisticTypeChecked`
+- Uses `parserOptions.projectService: true` for type-aware linting
+- Preserved custom rules:
+  - `strict: [2, 'global']`
+  - `no-var: 2` — use `const` / `let`
+  - `eqeqeq: [2, 'smart']` and `no-eq-null: 2`
+  - `callback-return: 2`
+  - `no-process-env: 2` — environment variables should be read in `config/` only
+  - `no-process-exit: 2`
+  - `global-require: 2`
+  - `default-case: 2`
+- Added TypeScript-specific rules:
+  - `@typescript-eslint/no-explicit-any: error`
+  - `@typescript-eslint/no-unused-vars: [error, { argsIgnorePattern: '^_' }]`
+  - `@typescript-eslint/no-floating-promises: off` only for `test/**/*.ts`
 
 ### Conventions
 
 - All source files use **TypeScript** (`.ts`).
 - TypeScript uses `module: "NodeNext"` / `moduleResolution: "NodeNext"`. Import specifiers for `.ts` source files must use **`.js`** extensions (e.g., `import { x } from './query.js'` even though the source file is `query.ts`).
 - Controllers are **classes** with async methods.
-- Models extend `BaseModel` and work directly with Knex query builder.
+- Models work directly with Kysely query builder. No `BaseModel` — Kysely's strong typing makes generic table-agnostic repositories impractical for this small codebase.
 - Routers are factory functions that receive a controller instance and return an Express router.
-- Native arrow functions are used for functional composition (manual `applyFilter` → `applySort` → `applyPagination` chaining).
+- Shared application types live in `src/types/` (e.g., `src/types/api-response.ts`, `src/types/error.ts`) and are imported by both source and test code using `.js` specifiers.
+- `applyFilter` is a generic Kysely `ExpressionBuilder` callback. It only processes string filter values; non-string values are ignored. Sorting and pagination are inlined directly in model query chains (no generic `applySort`/`applyPagination` helpers).
 
 ## Security Considerations
 
@@ -184,7 +197,7 @@ A `Dockerfile` is included:
 ## Common Pitfalls for Agents
 
 1. **File extensions**: All source is `.ts`. When importing a `.ts` file, use a `.js` extension in the specifier (NodeNext convention: `import { x } from './query.js'`).
-2. **Knex instance**: Always use the singleton from `src/lib/db.ts`. Do not create new Knex instances.
+2. **Kysely instance**: Always use the singleton from `src/lib/kysely.ts`. Do not create new Kysely instances.
 3. **Test database**: API tests use the real Express app and an in-memory SQLite database. Each test suite runs migrations and seeds in `beforeEach` and rolls back in `afterEach`.
 4. **Express 5 async errors**: Express 5 catches rejected promises from async handlers natively — no wrapper needed. Just pass the controller method (bound to its instance).
 5. **Query helper regex**: `applyFilter` uses `/.*name.*/` to decide between `whereLike` and `where`. Adding a field with "name" in it will automatically become a substring search.

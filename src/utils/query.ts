@@ -1,3 +1,5 @@
+import { ExpressionBuilder, sql } from 'kysely';
+
 export const extractQueryParams = (query: Record<string, unknown> = {}, validKeys: string[] = []) => {
   const params: Record<string, unknown> = {};
   for (const key of validKeys) {
@@ -45,34 +47,22 @@ export const extract = (query: Record<string, unknown>, validKeys: string[]) => 
   ] as const
 }
 
-export const applyFilter = <T>(q: Record<string, unknown>) => (db: T): T => {
-  const db_ = db as unknown as Record<string, (column: string, value: unknown) => unknown>;
-  Object.keys(q).forEach((key) => {
-    const qValue = q[key];
-    if (qValue) {
+export const applyFilter = <DB, TB extends keyof DB>(q: Record<string, unknown>) => {
+  return (eb: ExpressionBuilder<DB, TB>) => {
+    const conditions = [];
+    for (const [key, value] of Object.entries(q)) {
+      if (typeof value !== 'string' || value === '') {
+        continue;
+      }
       if (/.*name.*/.test(key)) {
-        (db_ as Record<string, (column: string, value: string) => unknown>).whereLike(key, `%${String(qValue).toLowerCase()}%`);
+        conditions.push(eb(sql.ref(key), 'like', `%${value.toLowerCase()}%`));
       } else {
-        db_.where(key, qValue);
+        conditions.push(eb(sql.ref(key), '=', value));
       }
     }
-  });
-  return db;
-}
-
-export const applySort = <T>(sort: { key?: string; order?: 'asc' | 'desc' }) => (db: T): T => {
-  const { key, order } = sort;
-  const db_ = db as unknown as Record<string, (column: string, direction: string) => unknown>;
-  if (key && order) {
-    db_.orderBy(key, order);
-  }
-  return db;
-}
-
-export const applyPagination = <T>(pagination: { limit?: number; offset?: number }) => (db: T): T => {
-  const { limit, offset } = pagination;
-  const db_ = db as unknown as Record<string, (n: number) => unknown>;
-  if (limit) db_.limit(limit);
-  if (offset) db_.offset(offset);
-  return db;
-}
+    if (conditions.length === 0) {
+      return eb(sql`1`, '=', 1);
+    }
+    return conditions.length === 1 ? conditions[0] : eb.and(conditions);
+  };
+};

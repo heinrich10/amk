@@ -377,8 +377,8 @@ For each model, rewrite Knex queries as Kysely queries:
 - `Person.getById()` → `db.selectFrom('persons').innerJoin('countries', ...).innerJoin('continents', ...)...`
 
 ### 3.5 Update Query Utilities
-- Rewrite `applyFilter`, `applySort`, `applyPagination` as Kysely query transformer functions
-- These will use Kysely's expression builder instead of Knex's chainable API
+- Rewrite `applyFilter` as a generic Kysely `ExpressionBuilder` callback using `sql.ref(key)` for column references
+- Remove `applySort` and `applyPagination` — Kysely's fluent API and strong typing make generic chainable helpers impractical; sorting and pagination are inlined directly in each model's query chain
 
 ### 3.6 Migration System Decision
 Kysely has no built-in migration CLI. Options:
@@ -397,10 +397,67 @@ Kysely has no built-in migration CLI. Options:
 
 ### 3.8 Remove Knex
 - Uninstall `knex`
-- Delete `knexfile.js`
+- Delete `knexfile.cjs`
 - Update `package.json` scripts
 
-**Exit Criteria:** No Knex references remain. All queries compile with full type safety. All tests pass.
+**Exit Criteria:** ✅ No Knex references remain. All queries compile with full type safety. All tests pass.
+
+**What was done:**
+- Installed `kysely` and `kysely-codegen`
+- Generated `src/db-schema.ts` from existing SQLite DB using `kysely-codegen`
+- Created `src/lib/kysely.ts` with Kysely `SqliteDialect` using a shared `better-sqlite3` `Database` instance
+- Deleted `src/lib/db.ts` (old Knex singleton)
+- Rewrote all models to use Kysely queries (`selectFrom`, `insertInto`, `updateTable`, `innerJoin`)
+- Deleted `src/model/base.ts` — Kysely's strong typing makes a generic `BaseModel` impractical; `getCount` is inlined per model
+- Rewrote `src/utils/query.ts`: `applyFilter` returns a generic `ExpressionBuilder` callback using `sql.ref(key)`; `applySort` and `applyPagination` were removed and inlined in model query chains
+- Converted Knex migration to Kysely format: `migrations/20240302031604_initial.ts`
+- Created seed data as a versioned Kysely migration: `migrations/20240302031605_seed_data.ts`
+- Created `scripts/migrate.ts` using Kysely's `Migrator` + `FileMigrationProvider` — supports `latest`, `down`, and `reset` commands
+- Rewrote `test/index.ts` to use Kysely's `Migrator` API (`migrateToLatest` / `migrateTo(NO_MIGRATIONS)`)
+- Removed `knexfile.cjs`, `seeds/seed_data.cjs`, and `seeds/` directory
+- Updated `package.json`: removed `knex` dependency, removed `"seed"` script, added `"migrate"`, `"migrate:down"`, and `"migrate:reset"` scripts
+- Updated `tsconfig.json`: removed `knexfile.cjs` from `include`
+- Updated `AGENTS.md` to reflect Kysely architecture
+
+---
+
+## Phase 3.5: Linting & Code Quality ✅ COMPLETE
+
+**Goal:** Add a working TypeScript-aware linter to enforce code quality and consistency. The project already had an `.eslintrc.js` (pre-TypeScript, unused), but ESLint was not installed and there was no `lint` script.
+
+### What Was Done
+
+1. **Installed dependencies**
+   - `eslint` (core)
+   - `@eslint/js` (recommended rules)
+   - `typescript-eslint` (TypeScript parser + plugin)
+   - `globals` (Node.js globals for flat config)
+
+2. **Replaced `.eslintrc.js` with `eslint.config.mjs`** (flat config format)
+   - Extended `js.configs.recommended`, `tseslint.configs.strictTypeChecked`, and `tseslint.configs.stylisticTypeChecked`
+   - Configured `parserOptions.projectService: true` for type-aware linting
+   - Targeted `src/**/*.ts`, `test/**/*.ts`, `scripts/**/*.ts`, `migrations/**/*.ts`
+   - Preserved existing custom rules (`no-var`, `eqeqeq`, `strict`, `callback-return`, `no-process-env`, `no-process-exit`, `global-require`, `default-case`)
+   - Added `@typescript-eslint/no-explicit-any: error` and `@typescript-eslint/no-unused-vars` with `_` prefix ignore
+   - Disabled `@typescript-eslint/no-floating-promises` only for test files
+
+3. **Added `package.json` scripts**
+   - `"lint": "eslint src test scripts migrations"`
+   - `"lint:fix": "eslint src test scripts migrations --fix"`
+
+4. **Fixed lint and type errors**
+   - Removed unused imports and corrected type casts across source, tests, migrations, and scripts
+   - Added `NODE_ENV` to `config/config.ts` so the error handler can read it without violating `no-process-env`
+   - Introduced shared type files for API responses (`src/types/api-response.ts`) and errors (`src/types/error.ts`)
+   - Updated `scripts/migrate.ts` to exit with a non-zero status on failure
+   - Narrowed `applyFilter` in `src/utils/query.ts` to string values only
+
+### Why now?
+- Phase 2 gave us TypeScript; Phase 3 gave us type-safe queries
+- Adding linting before Phase 4 (DDD refactor) ensures the new architecture is built on clean, consistently styled code
+- Catching issues like unused imports, implicit `any`, or missing `await` early prevents bugs in the DDD layer
+
+**Exit Criteria:** ✅ `npm run lint` passes with zero errors. `npm test` passes. All source, test, script, and migration files are covered.
 
 ---
 
