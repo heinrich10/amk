@@ -14,7 +14,7 @@ export class PersonController {
   async getAll(req: Request, res: Response) {
     const { query } = req;
     const validKey = ['first_name', 'last_name', 'country_code'];
-    const [q, sort, pagination] = extract(query as Record<string, unknown>, validKey);
+    const [q, sort, pagination] = extract(query, validKey);
     const person = await this.person.get({ q, sort, pagination });
     res.json(person);
   }
@@ -26,11 +26,11 @@ export class PersonController {
   }
 
   async createPerson(req: Request, res: Response) {
-    const { body } = req;
+    const body = req.body as Record<string, unknown>;
     const result = PersonSchema.safeParse(body);
     if (result.success) {
       const person = await this.person.save(result.data);
-      res.json((person as unknown[])[0]);
+      res.json(person[0]);
     } else {
       const error = new ValidationError('Validation failed');
       error.errors = result.error.issues;

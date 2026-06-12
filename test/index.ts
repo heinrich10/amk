@@ -18,14 +18,14 @@ const migrator = new Migrator({
 export const up = async () => {
   const { error } = await migrator.migrateToLatest();
   if (error) {
-    throw error;
+    throw new Error(error instanceof Error ? error.message : JSON.stringify(error));
   }
 };
 
 export const down = async () => {
   const { error } = await migrator.migrateTo(NO_MIGRATIONS);
   if (error) {
-    throw error;
+    throw new Error(error instanceof Error ? error.message : JSON.stringify(error));
   }
 };
 

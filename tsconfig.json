@@ -21,6 +21,8 @@
     "src/**/*",
     "test/**/*",
     "config/**/*",
+    "scripts/**/*",
+    "migrations/**/*",
     "app.ts"
   ],
   "exclude": ["node_modules", "dist"]

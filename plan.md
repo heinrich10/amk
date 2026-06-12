@@ -421,40 +421,43 @@ Kysely has no built-in migration CLI. Options:
 
 ---
 
-## Phase 3.5: Linting & Code Quality
+## Phase 3.5: Linting & Code Quality ✅ COMPLETE
 
-**Goal:** Add a working TypeScript-aware linter to enforce code quality and consistency. The project already has an `.eslintrc.js` (pre-TypeScript, unused), but ESLint is not installed and there is no `lint` script.
+**Goal:** Add a working TypeScript-aware linter to enforce code quality and consistency. The project already had an `.eslintrc.js` (pre-TypeScript, unused), but ESLint was not installed and there was no `lint` script.
 
-### What to do
+### What Was Done
 
-1. **Install dependencies**
+1. **Installed dependencies**
    - `eslint` (core)
    - `@eslint/js` (recommended rules)
    - `typescript-eslint` (TypeScript parser + plugin)
+   - `globals` (Node.js globals for flat config)
 
-2. **Replace `.eslintrc.js` with `eslint.config.mjs`** (flat config format)
-   - Extend `eslint.configs.recommended` and `tseslint.configs.recommended`
-   - Target `src/**/*.ts`, `test/**/*.ts`, `scripts/**/*.ts`, `migrations/**/*.ts`
-   - Key rules:
-     - `@typescript-eslint/no-explicit-any: error`
-     - `no-var: error`
-     - `eqeqeq: [error, smart]`
-     - `no-eq-null: error`
+2. **Replaced `.eslintrc.js` with `eslint.config.mjs`** (flat config format)
+   - Extended `js.configs.recommended`, `tseslint.configs.strictTypeChecked`, and `tseslint.configs.stylisticTypeChecked`
+   - Configured `parserOptions.projectService: true` for type-aware linting
+   - Targeted `src/**/*.ts`, `test/**/*.ts`, `scripts/**/*.ts`, `migrations/**/*.ts`
+   - Preserved existing custom rules (`no-var`, `eqeqeq`, `strict`, `callback-return`, `no-process-env`, `no-process-exit`, `global-require`, `default-case`)
+   - Added `@typescript-eslint/no-explicit-any: error` and `@typescript-eslint/no-unused-vars` with `_` prefix ignore
+   - Disabled `@typescript-eslint/no-floating-promises` only for test files
 
-3. **Add `package.json` scripts**
+3. **Added `package.json` scripts**
    - `"lint": "eslint src test scripts migrations"`
    - `"lint:fix": "eslint src test scripts migrations --fix"`
 
-4. **Fix lint errors**
-   - Run `npm run lint:fix` to auto-fix what it can
-   - Manually fix remaining issues (unused imports, missing `await`, etc.)
+4. **Fixed lint and type errors**
+   - Removed unused imports and corrected type casts across source, tests, migrations, and scripts
+   - Added `NODE_ENV` to `config/config.ts` so the error handler can read it without violating `no-process-env`
+   - Introduced shared type files for API responses (`src/types/api-response.ts`) and errors (`src/types/error.ts`)
+   - Updated `scripts/migrate.ts` to exit with a non-zero status on failure
+   - Narrowed `applyFilter` in `src/utils/query.ts` to string values only
 
 ### Why now?
 - Phase 2 gave us TypeScript; Phase 3 gave us type-safe queries
 - Adding linting before Phase 4 (DDD refactor) ensures the new architecture is built on clean, consistently styled code
-- Catching issues like unused imports or missing `await` early prevents bugs in the DDD layer
+- Catching issues like unused imports, implicit `any`, or missing `await` early prevents bugs in the DDD layer
 
-**Exit Criteria:** ✅ `npm run lint` passes with zero errors. All source, test, script, and migration files are covered.
+**Exit Criteria:** ✅ `npm run lint` passes with zero errors. `npm test` passes. All source, test, script, and migration files are covered.
 
 ---
 

@@ -10,6 +10,8 @@
     "start": "node --env-file=.env dist/app.js",
     "dev": "tsx --env-file=.env app.ts",
     "test": "c8 tsx --env-file=.env.test --test --test-concurrency=1 **/*.test.ts",
+    "lint": "eslint src test scripts migrations",
+    "lint:fix": "eslint src test scripts migrations --fix",
     "migrate": "tsx scripts/migrate.ts latest",
     "migrate:down": "tsx scripts/migrate.ts down",
     "migrate:reset": "tsx scripts/migrate.ts reset"
@@ -38,15 +40,19 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/better-sqlite3": "^7.6.13",
     "@types/express": "^5.0.6",
     "@types/node": "^25.9.2",
     "@types/supertest": "^7.2.0",
     "c8": "^9.1.0",
+    "eslint": "^10.4.1",
     "expect": "^29.7.0",
+    "globals": "^17.6.0",
     "kysely-codegen": "^0.20.0",
     "supertest": "^7.2.2",
     "tsx": "^4.22.4",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.61.0"
   }
 }

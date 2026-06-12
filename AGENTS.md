@@ -22,9 +22,9 @@ AMK is a minimal, no-frills REST API server built with **Express.js 5**, **Kysel
 | Database | SQLite3 via `better-sqlite3` |
 | Validation | Zod |
 | Async Error Handling | Express 5 native |
-| Testing | `node:test`, `expect`, Supertest 6 |
+| Testing | `node:test`, `expect`, Supertest 7 |
 | Coverage | c8 9 |
-| Linting | ESLint (eslint:recommended + custom rules) |
+| Linting | ESLint flat config (`eslint.config.mjs`) with `typescript-eslint` strict + stylistic type-checked rules |
 | Environment Config | Node.js `--env-file` |
 | Functional Utilities | Native ES2022 |
 | TS Loader (dev/test) | tsx |
@@ -41,6 +41,7 @@ AMK is a minimal, no-frills REST API server built with **Express.js 5**, **Kysel
 │   ├── router/             # Express route definitions (one per entity)
 │   ├── schema/             # Zod schemas for request validation
 │   ├── lib/                # Shared infrastructure (DB connection, error handling)
+│   ├── types/              # Shared application types (API responses, errors)
 │   └── utils/              # Pure helper functions (query parsing, filtering, etc.)
 ├── test/
 │   ├── api_tests/          # Integration / HTTP-level tests (*.test.ts)
@@ -55,7 +56,7 @@ AMK is a minimal, no-frills REST API server built with **Express.js 5**, **Kysel
 │   └── migrate.ts          # Kysely migration runner
 ├── package.json            # Dependencies and npm scripts
 ├── .c8rc                   # Coverage reporter configuration
-├── .eslintrc.js            # Linting rules
+├── eslint.config.mjs       # ESLint flat config (type-aware rules)
 └── Dockerfile              # Node 20 Alpine container image
 ```
 
@@ -115,6 +116,10 @@ npm run dev            # Runs directly via tsx: tsx --env-file=.env app.ts
 # Run the test suite with coverage
 npm test               # Equivalent to: c8 tsx --env-file=.env.test --test --test-concurrency=1 **/*.test.ts
 
+# Run lint checks
+npm run lint           # Check for lint and type-aware errors
+npm run lint:fix       # Auto-fix lint issues where possible
+
 # Run Kysely migrations
 npm run migrate        # Run all pending migrations
 npm run migrate:down   # Roll back one migration
@@ -133,7 +138,7 @@ npm run migrate:reset  # Roll back all migrations
 
 ## Database
 
-- **Development**: SQLite3 file (`./dbdev.sqlite3.db`) — configurable via `DB` env var (see `config/config.ts`).
+- **Development**: SQLite3 file (`./dbdev.sqlite3.db`) — configurable via `DB` env var. `NODE_ENV` is also centralized in `config/config.ts` (see `Config.DB` and `Config.NODE_ENV`).
 - **Test**: SQLite3 `:memory:` database.
 - **Driver**: `better-sqlite3` via Kysely. Replaced the deprecated `sqlite3` package.
 - **Pool constraint for `:memory:`**: Kysely's `SqliteDialect` accepts a shared `better-sqlite3` `Database` instance directly. This ensures migrations and queries share the same in-memory database without connection-pool configuration.
@@ -144,17 +149,24 @@ npm run migrate:reset  # Roll back all migrations
 
 ## Code Style Guidelines
 
-ESLint is configured in `.eslintrc.js` with the following notable rules:
+ESLint is configured as a flat config in `eslint.config.mjs` with the following notable setup:
 
-- `ecmaVersion: 2022`, `sourceType: "module"`
-- `strict: [2, 'global']`
-- `no-var: 2` — use `const` / `let`
-- `eqeqeq: [2, 'smart']` and `no-eq-null: 2`
-- `callback-return: 2`
-- `no-process-env: 2` — environment variables should be read in `config/` only
-- `no-process-exit: 2`
-- `global-require: 2`
-- `default-case: 2`
+- Targets `src/**/*.ts`, `test/**/*.ts`, `scripts/**/*.ts`, and `migrations/**/*.ts`
+- Extends `js.configs.recommended`, `tseslint.configs.strictTypeChecked`, and `tseslint.configs.stylisticTypeChecked`
+- Uses `parserOptions.projectService: true` for type-aware linting
+- Preserved custom rules:
+  - `strict: [2, 'global']`
+  - `no-var: 2` — use `const` / `let`
+  - `eqeqeq: [2, 'smart']` and `no-eq-null: 2`
+  - `callback-return: 2`
+  - `no-process-env: 2` — environment variables should be read in `config/` only
+  - `no-process-exit: 2`
+  - `global-require: 2`
+  - `default-case: 2`
+- Added TypeScript-specific rules:
+  - `@typescript-eslint/no-explicit-any: error`
+  - `@typescript-eslint/no-unused-vars: [error, { argsIgnorePattern: '^_' }]`
+  - `@typescript-eslint/no-floating-promises: off` only for `test/**/*.ts`
 
 ### Conventions
 
@@ -163,7 +175,8 @@ ESLint is configured in `.eslintrc.js` with the following notable rules:
 - Controllers are **classes** with async methods.
 - Models work directly with Kysely query builder. No `BaseModel` — Kysely's strong typing makes generic table-agnostic repositories impractical for this small codebase.
 - Routers are factory functions that receive a controller instance and return an Express router.
-- `applyFilter` is a generic Kysely `ExpressionBuilder` callback. Sorting and pagination are inlined directly in model query chains (no generic `applySort`/`applyPagination` helpers).
+- Shared application types live in `src/types/` (e.g., `src/types/api-response.ts`, `src/types/error.ts`) and are imported by both source and test code using `.js` specifiers.
+- `applyFilter` is a generic Kysely `ExpressionBuilder` callback. It only processes string filter values; non-string values are ignored. Sorting and pagination are inlined directly in model query chains (no generic `applySort`/`applyPagination` helpers).
 
 ## Security Considerations
 
