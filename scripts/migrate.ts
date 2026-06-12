@@ -44,4 +44,4 @@ async function run() {
   await db.destroy();
 }
 
-run();
+run().catch(console.error);

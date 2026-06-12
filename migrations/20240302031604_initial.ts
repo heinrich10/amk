@@ -1,4 +1,4 @@
-import { Kysely, sql } from 'kysely';
+import { Kysely } from 'kysely';
 import { DB } from '../src/db-schema.js';
 
 export async function up(db: Kysely<DB>): Promise<void> {

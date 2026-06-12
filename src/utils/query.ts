@@ -52,10 +52,11 @@ export const applyFilter = <DB, TB extends keyof DB>(q: Record<string, unknown>)
     const conditions = [];
     for (const [key, value] of Object.entries(q)) {
       if (value !== undefined && value !== null && value !== '') {
+        const strValue = typeof value === 'string' ? value : JSON.stringify(value);
         if (/.*name.*/.test(key)) {
-          conditions.push(eb(sql.ref(key), 'like', `%${String(value).toLowerCase()}%`));
+          conditions.push(eb(sql.ref(key), 'like', `%${strValue.toLowerCase()}%`));
         } else {
-          conditions.push(eb(sql.ref(key), '=', value));
+          conditions.push(eb(sql.ref(key), '=', strValue));
         }
       }
     }
