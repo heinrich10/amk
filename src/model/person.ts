@@ -1,52 +1,68 @@
+import { Insertable, Updateable, sql } from 'kysely';
 import { PersonSchema } from '../schema/person.js';
-import { BaseModel } from './base.js';
-import { applySort, applyPagination, applyFilter } from '../utils/query.js';
+import { db } from '../lib/kysely.js';
+import { DB } from '../db-schema.js';
+import { applyFilter } from '../utils/query.js';
 
-export class Person extends BaseModel {
-  constructor() {
-    super('persons');
-  }
-
+export class Person {
   async get({ q = {}, sort = {}, pagination = {} }: {
     q?: Record<string, unknown>;
     sort?: { key?: string; order?: 'asc' | 'desc' };
     pagination?: { limit?: number; offset?: number };
   }): Promise<Record<string, unknown>> {
     const { limit, offset } = pagination;
-    const qs = applyFilter(q)(this.getDB()) as import('knex').Knex.QueryBuilder;
-    applySort(sort)(qs);
-    applyPagination(pagination)(qs);
-    const [total, rs] = await Promise.all([
+    let query = db.selectFrom('persons')
+      .select(['id', 'first_name', 'last_name', 'country_code'])
+      .where(applyFilter<DB, 'persons'>(q));
+    if (sort.key && sort.order) {
+      query = query.orderBy(sql.ref(sort.key), sort.order);
+    }
+    if (pagination.limit) {
+      query = query.limit(pagination.limit);
+    }
+    if (pagination.offset !== undefined) {
+      query = query.offset(pagination.offset);
+    }
+    const [total, data] = await Promise.all([
       this.getCount(q),
-      qs.select('id', 'first_name', 'last_name', 'country_code'),
+      query.execute(),
     ]);
     return {
       total,
       limit,
       offset,
-      data: rs,
+      data,
     };
   }
 
+  async getCount(q: Record<string, unknown> = {}): Promise<number> {
+    const result = await db.selectFrom('persons')
+      .where(applyFilter<DB, 'persons'>(q))
+      .select((eb) => eb.fn.countAll().as('count'))
+      .executeTakeFirst();
+    return Number(result?.count ?? 0);
+  }
+
   async getById(id: string | number): Promise<Record<string, unknown>> {
-    const rs = await this.getDB()
-      .join('countries', 'persons.country_code', 'countries.code')
-      .join('continents', 'countries.continent_code', 'continents.code')
-      .where({ id })
-      .select(
-        'persons.id as id',
-        'persons.first_name as first_name',
-        'persons.last_name as last_name',
-        'persons.country_code as country_code',
+    const rs = (await db.selectFrom('persons')
+      .innerJoin('countries', 'persons.country_code', 'countries.code')
+      .innerJoin('continents', 'countries.continent_code', 'continents.code')
+      .where('persons.id', '=', Number(id))
+      .select([
+        'persons.id',
+        'persons.first_name',
+        'persons.last_name',
+        'persons.country_code',
         'countries.name as country_name',
-        'countries.phone as phone',
-        'countries.symbol as symbol',
-        'countries.capital as capital',
-        'countries.currency as currency',
-        'countries.alpha_3 as alpha_3',
+        'countries.phone',
+        'countries.symbol',
+        'countries.capital',
+        'countries.currency',
+        'countries.alpha_3',
         'continents.name as continent_name',
         'continents.code as continent_code',
-      ).first() as Record<string, unknown> || {};
+      ])
+      .executeTakeFirst() ?? {}) as Record<string, unknown>;
 
     const res: Record<string, unknown> = {
       id: rs.id,
@@ -76,12 +92,19 @@ export class Person extends BaseModel {
   }
 
   async save(data: Record<string, unknown>): Promise<unknown[]> {
-    PersonSchema.parse(data);
-    return this.getDB().insert(data, ['id', 'first_name', 'last_name', 'country_code']);
+    const parsed = PersonSchema.parse(data);
+    return db.insertInto('persons')
+      .values(parsed as Insertable<DB['persons']>)
+      .returning(['id', 'first_name', 'last_name', 'country_code'])
+      .execute();
   }
 
   async update(id: string | number, data: Record<string, unknown>): Promise<unknown[]> {
-    PersonSchema.parse(data);
-    return this.getDB().where({ id }).update(data, ['id', 'first_name', 'last_name', 'country_code']);
+    const parsed = PersonSchema.parse(data);
+    return db.updateTable('persons')
+      .set(parsed as Updateable<DB['persons']>)
+      .where('id', '=', Number(id))
+      .returning(['id', 'first_name', 'last_name', 'country_code'])
+      .execute();
   }
 }

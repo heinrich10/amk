@@ -1,15 +1,18 @@
 # AMK
 
-Minimal REST API server using Express.js, Knex.js, and SQLite3
+Minimal REST API server using Express.js 5, Kysely, and SQLite3. Written in TypeScript.
 
 ## Pre-requisites
-- Node.js 20+
+- Node.js 22+
 
 ## How to run
 1. Install dependencies: `npm install`
-2. Create a `.env` file with the required environment variables (see `config/config.mjs` for available options)
-3. Run the app: `npm start`
-4. Call the API endpoint: `curl http://localhost:3000/persons`
+2. Create a `.env` file with the required environment variables (see `config/config.ts` for available options)
+3. Run migrations to initialize the database: `npm run migrate`
+4. Start the server:
+   - Production (compiled): `npm start`
+   - Development (via tsx): `npm run dev`
+5. Call the API endpoint: `curl http://localhost:3000/persons`
 
 ## Try the API with JetBrains HTTP Client
 The `http/` folder contains [JetBrains HTTP Client](https://www.jetbrains.com/help/idea/http-client-in-product-code-editor.html) files:
@@ -18,20 +21,37 @@ The `http/` folder contains [JetBrains HTTP Client](https://www.jetbrains.com/he
 
 Open `http/api.http` in any JetBrains IDE, pick the environment from the dropdown, and run individual requests from the gutter icons.
 
-## Initialize DB and seed data
-1. Run migrations: `npm run migrate`
-2. Run seeds: `npm run seed`
-3. Refer to `knexfile.js` for other configuration
+## Database migrations
+Migrations are managed via Kysely's built-in `Migrator` API.
+
+```bash
+# Run all pending migrations (includes schema + seed data)
+npm run migrate
+
+# Roll back the last migration
+npm run migrate:down
+
+# Roll back all migrations
+npm run migrate:reset
+```
+
+Migrations live in `migrations/` as TypeScript files and are executed via `tsx`.
 
 ## Tests
 1. Make sure dependencies are installed
 2. Run `npm test`
 
 ### Test stack
-- `node:test` — built-in test runner (Node 20+)
+- `node:test` — built-in test runner (Node 22+)
 - `expect` — standalone assertion library (Jest-style)
 - `supertest` — HTTP-level integration testing
 - `c8` — V8 coverage reporting
+
+### Building for production
+```bash
+npm run build   # Compiles TypeScript to dist/ via tsc
+npm start       # Runs the compiled output
+```
 
 ## License
 [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0)

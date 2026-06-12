@@ -1,18 +1,14 @@
-import { BaseModel } from './base.js';
+import { db } from '../lib/kysely.js';
 
-export class Continent extends BaseModel {
-  constructor() {
-    super('continents');
-  }
-
+export class Continent {
   async get(): Promise<unknown[]> {
-    return this.getDB().select('code', 'name');
+    return db.selectFrom('continents').select(['code', 'name']).execute();
   }
 
   async getByCode(code: string): Promise<unknown> {
-    return this.getDB()
-      .where({ code })
-      .select('code', 'name')
-      .first();
+    return db.selectFrom('continents')
+      .where('code', '=', code)
+      .select(['code', 'name'])
+      .executeTakeFirst();
   }
 }
