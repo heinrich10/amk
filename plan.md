@@ -2,14 +2,29 @@
 
 ## Executive Summary
 
-This roadmap transforms AMK from a minimal ES-module Express demo into a modern, type-safe, Domain-Driven REST API. The work is split into 6 phases (0–5) designed to be executed sequentially, with a working application at the end of each phase.
+This roadmap transforms AMK from a minimal ES-module Express demo into a modern, type-safe, Domain-Driven REST API. The work is split into 5 phases (0–4) designed to be executed sequentially, with a working application at the end of each phase.
 
 ---
 
-## Current State Analysis
+## Current Status
 
-### Dependency Health
-| Package | Current | Latest | Status |
+**As of the latest code changes, Phases 0–3.5 are complete.** The repository is now a working TypeScript/Express 5/Kysely application with strict ESLint, `node:test` + `expect` + Supertest, and Kysely migrations.
+
+- ✅ Phase 0 — Test runner modernization (`node:test` + `expect`, `better-sqlite3`)
+- ✅ Phase 1 — Dependency cleanup (Express 5, Zod, native ES2022, custom errors)
+- ✅ Phase 2 — TypeScript migration (100% `.ts`, NodeNext, `tsx`)
+- ✅ Phase 3 — Knex → Kysely migration (type-safe queries, Kysely migrations)
+- ✅ Phase 3.5 — TypeScript-aware ESLint flat config
+- 📋 Phase 4 — Domain-Driven Design architecture (planned)
+
+The sections below describe the historical baseline, the dependency audit that drove the replacements, and the detailed work completed in each phase. Phase 4 remains the forward-looking roadmap.
+
+---
+
+## Historical Baseline (Pre-Modernization)
+
+### Dependency Health (at the start of modernization)
+| Package | Pre-Modernization | Latest | Status |
 |---------|---------|--------|--------|
 | express | 4.19.2 | 5.2.1 | **Major update available** (v5 stable) |
 | knex | 3.1.0 | 3.2.10 | Patch/minor update available |
@@ -20,7 +35,7 @@ This roadmap transforms AMK from a minimal ES-module Express demo into a modern,
 | amk-wrap | 0.2.0 | 1.0.0 | Active (v1 just released) |
 | api-error-handler | 1.0.0 | 1.0.0 | **Abandoned** (single release, 2014) |
 
-### Architecture Today
+### Architecture at the Start of Modernization
 - **Pattern:** Anemic layered architecture (Router → Controller → Model)
 - **DI:** Manual object graph in `src/api.mjs`
 - **Modules:** ES modules (`.mjs`)
@@ -461,7 +476,7 @@ Kysely has no built-in migration CLI. Options:
 
 ---
 
-## Phase 4: Domain-Driven Design Architecture (Weeks 6–8)
+## Phase 4: Domain-Driven Design Architecture (Weeks 6–8) 📋 PLANNED
 
 **Goal:** Restructure the codebase from a technical layered architecture to a domain-centric architecture.
 
@@ -597,51 +612,6 @@ Since Express v5 handles async errors natively, `amk-wrap` is no longer necessar
 
 ---
 
-## Phase 5: New Features & API Completeness (Weeks 9–10)
-
-**Goal:** Evolve the API from read-only/demo into a full-featured CRUD API.
-
-### 5.1 Missing CRUD Operations
-
-**Continents (currently read-only):**
-- `POST /continents` — Create a continent
-- `PUT /continents/:code` — Update a continent
-- `DELETE /continents/:code` — Delete a continent (cascade to countries?)
-
-**Countries (currently read-only):**
-- `POST /countries` — Create a country
-- `PUT /countries/:code` — Update a country
-- `DELETE /countries/:code` — Delete a country
-
-**Persons (partial CRUD):**
-- `PUT /persons/:id` — Update a person (exists in model, no route)
-- `DELETE /persons/:id` — Delete a person
-
-### 5.2 Validation Schemas
-- Add Zod schemas for all new endpoints
-- Validate `country_code` exists in `countries` table before creating/updating a person
-- Validate `continent_code` exists in `continents` table before creating/updating a country
-
-### 5.3 API Feature Enhancements
-- **Search endpoint:** `GET /countries/search?q=united` (full-text search across name, capital, currency)
-- **Statistics endpoint:** `GET /continents/:code/stats` — aggregate country count, total population (if added)
-- **Bulk operations:** `POST /persons/bulk` for batch inserts
-- **HATEOAS links:** Add `_links` to response envelopes
-
-### 5.4 Potential Schema Extensions
-- Add `created_at` / `updated_at` timestamps to all tables
-- Add `population` field to `countries`
-- Add `email` field to `persons`
-- Consider a `cities` table between `countries` and `persons` for richer hierarchy
-
-### 5.5 OpenAPI Specification
-- Add an `openapi.yaml` or generate one from routes
-- Add a `/docs` endpoint serving Swagger UI
-
-**Exit Criteria:** Full CRUD for all 3 entities. New features have tests. API is documented.
-
----
-
 ## Appendix A: Dependency Replacement Map
 
 | Old | Status | Replacement | Phase |
@@ -692,6 +662,5 @@ Since Express v5 handles async errors natively, `amk-wrap` is no longer necessar
 2. **Phase 2** — Critical enabler for everything after.
 3. **Phase 3** — Natural follow-up to TypeScript; Kysely's types shine here.
 4. **Phase 4** — Easier once types and queries are modern.
-5. **Phase 5** — Build new features on the clean architecture.
 
-**Estimated total effort:** 8–10 weeks for a single developer working part-time (including Phase 0).
+**Estimated total effort:** 8–10 weeks for a single developer working part-time (including Phase 0). Phases 0–3.5 are complete; the remaining effort applies to Phase 4.
