@@ -7,7 +7,9 @@ Minimal REST API server using Express.js 5, Kysely, and SQLite3. Written in Type
 
 ## How to run
 1. Install dependencies: `npm install`
-2. Create a `.env` file with the required environment variables (see `config/config.ts` for available options)
+2. Create a `.env` file with the required environment variables (see `config/config.ts` for available options):
+   - `DB` — SQLite database file path (default: `./dbdev.sqlite3.db`)
+   - `NODE_ENV` — `development` or `production` (default: `development`)
 3. Run migrations to initialize the database: `npm run migrate`
 4. Start the server:
    - Production (compiled): `npm start`
@@ -40,6 +42,8 @@ Migrations live in `migrations/` as TypeScript files and are executed via `tsx`.
 ## Tests
 1. Make sure dependencies are installed
 2. Run `npm test`
+
+Tests use `.env.test` (SQLite `:memory:`) and run sequentially (`--test-concurrency=1`) because all test files share a singleton Kysely instance.
 
 ### Test stack
 - `node:test` — built-in test runner (Node 22+)

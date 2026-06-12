@@ -42,9 +42,12 @@ AMK is a minimal, no-frills REST API server built with **Express.js 5**, **Kysel
 │   ├── schema/             # Zod schemas for request validation
 │   ├── lib/                # Shared infrastructure (DB connection, error handling)
 │   ├── types/              # Shared application types (API responses, errors)
-│   └── utils/              # Pure helper functions (query parsing, filtering, etc.)
+│   ├── utils/              # Pure helper functions (query parsing, filtering, etc.)
+│   ├── db-schema.ts        # Kysely-codegen generated DB schema types
+│   └── types.d.ts          # Ambient type declarations (e.g. response-time)
 ├── test/
 │   ├── api_tests/          # Integration / HTTP-level tests (*.test.ts)
+│   │   └── helper.ts       # Shared Supertest pagination helper
 │   ├── unit_tests/         # Unit tests for utilities (*.test.ts)
 │   └── index.ts            # Test bootstrap — exports up/down/teardown
 ├── config/
@@ -132,6 +135,7 @@ npm run migrate:reset  # Roll back all migrations
 - `test/index.ts` exports `up()`, `down()`, and `teardown()` for Kysely migrations.
 - Each test file imports `up`/`down`/`teardown` and manages its own lifecycle hooks (`beforeEach`/`afterEach`/`after`).
 - API tests live in `test/api_tests/*.test.ts` and use **Supertest** against the Express app exported from `src/api.ts`.
+- `test/api_tests/helper.ts` provides a shared Supertest helper for paginated list assertions.
 - Unit tests live in `test/unit_tests/**/*.test.ts`.
 - Tests must run sequentially (`--test-concurrency=1`) because all files share a singleton Kysely instance backed by a single `:memory:` SQLite database.
 - c8 is configured with `all: true` and reporters `lcov` + `text-summary`.
@@ -176,6 +180,8 @@ ESLint is configured as a flat config in `eslint.config.mjs` with the following 
 - Models work directly with Kysely query builder. No `BaseModel` — Kysely's strong typing makes generic table-agnostic repositories impractical for this small codebase.
 - Routers are factory functions that receive a controller instance and return an Express router.
 - Shared application types live in `src/types/` (e.g., `src/types/api-response.ts`, `src/types/error.ts`) and are imported by both source and test code using `.js` specifiers.
+- Ambient module declarations (e.g. for `response-time`) live in `src/types.d.ts`.
+- Zod schemas are colocated in `src/schema/`; `src/schema/index.ts` exports a `schemas` registry for consumers that need the full set.
 - `applyFilter` is a generic Kysely `ExpressionBuilder` callback. It only processes string filter values; non-string values are ignored. Sorting and pagination are inlined directly in model query chains (no generic `applySort`/`applyPagination` helpers).
 
 ## Security Considerations
@@ -183,7 +189,7 @@ ESLint is configured as a flat config in `eslint.config.mjs` with the following 
 - The project uses a custom error handler (`src/lib/error-handler.ts`) for Express error handling. Stack traces are hidden in production (`NODE_ENV=production`).
 - Zod is used for request body validation. The `PersonController` validates POST bodies with `PersonSchema.safeParse()`; list endpoints rely on `extract()` helpers for query parsing.
 - No authentication or authorization layer is present — this is a sample/demo API.
-- There is no `.env.example` file in the repository despite the README referencing one. The only env file present is `.env.test`.
+- Environment variables are read only in `config/config.ts` (`DB`, `NODE_ENV`). The repository includes `.env` for development and `.env.test` for tests.
 
 ## Deployment
 
