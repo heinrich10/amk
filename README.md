@@ -1,6 +1,6 @@
 # AMK
 
-Minimal REST API server using Express.js 5, Kysely, and SQLite3. Written in TypeScript.
+Minimal REST API server using Express.js 5, Kysely, and SQLite3. Written in TypeScript with strict ESLint rules.
 
 ## Pre-requisites
 - Node.js 22+
@@ -46,6 +46,12 @@ Migrations live in `migrations/` as TypeScript files and are executed via `tsx`.
 - `expect` — standalone assertion library (Jest-style)
 - `supertest` — HTTP-level integration testing
 - `c8` — V8 coverage reporting
+
+### Linting
+```bash
+npm run lint      # Check for lint and type-aware errors
+npm run lint:fix  # Auto-fix lint issues where possible
+```
 
 ### Building for production
 ```bash
